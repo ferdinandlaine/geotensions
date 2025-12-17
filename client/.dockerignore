@@ -1,0 +1,21 @@
+# Node + Vite
+/node_modules/
+/dist/
+
+# Environment
+.env*
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Config
+.prettierrc
+.prettierignore
+.gitignore
+
+# Docs
+README.md
+
+# OS
+.DS_Store

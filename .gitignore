@@ -1,0 +1,6 @@
+**/.env*
+!**/.env.template
+**/.DS_Store
+**/*.md
+!README.md
+data/

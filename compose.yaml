@@ -1,0 +1,57 @@
+services:
+  client:
+    build:
+      context: ./client
+    ports:
+      - "${CLIENT_PORT:-80}:80"
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ./api:/var/www/html
+      - ./api/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php-fpm
+
+  php-fpm:
+    build:
+      context: ./api
+    volumes:
+      - ./api:/var/www/html
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?serverVersion=18&charset=utf8
+    depends_on:
+      - database
+
+  ingest:
+    build:
+      context: ./scripts/ingest
+    volumes:
+      - ./data:/data
+    environment:
+      INCOMING_DIR: /data/incoming
+      ARCHIVED_DIR: /data/archived
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    depends_on:
+      - database
+
+  database:
+    build:
+      context: ./scripts/database
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - database:/var/lib/postgresql
+
+volumes:
+  database:

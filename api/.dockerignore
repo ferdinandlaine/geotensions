@@ -1,0 +1,21 @@
+# Symfony
+/public/bundles/
+/vendor/
+/var/
+
+# Environment
+.env*
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Config
+.editorconfig
+.gitignore
+
+# Docs
+README.md
+
+# OS
+.DS_Store
