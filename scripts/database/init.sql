@@ -47,10 +47,10 @@ CREATE TABLE events (
 );
 
 -- Spatial index (essential for map queries)
-CREATE INDEX geom ON events USING GIST(geom);
+CREATE INDEX events_geom_idx ON events USING GIST(geom);
 
--- Temporal index (for date filtering)
-CREATE INDEX event_date ON events(date);
+-- Composite index for date-ordered queries (supports ORDER BY date DESC, id DESC)
+CREATE INDEX events_date_id_idx ON events(date DESC, id DESC);
 
 -- Event type index (for filtering by event type)
-CREATE INDEX event_type ON events(type);
+CREATE INDEX events_type_idx ON events(type);

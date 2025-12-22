@@ -14,8 +14,5 @@ Dockerfile
 .editorconfig
 .gitignore
 
-# Docs
-README.md
-
 # OS
 .DS_Store

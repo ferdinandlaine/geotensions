@@ -102,7 +102,5 @@ docker compose exec ingest python /app/ingest_acled.py
 
 ### Critical Interpretation Notes
 
-- `event_type`/`sub_event_type`: Follow ACLED methodology (not arbitrary)
-- `fatalities`: Display with caution - may use conventional values (e.g., 3, 10) when exact count unknown
-- Coverage: Not exhaustive ground truth - coded from media sources
-- Always display `source` and `notes` when available
+- **`event_type`/`sub_event_type`**: Follow ACLED methodology (not arbitrary)
+- **Event IDs**: The API uses ACLED's official identifiers (`acled_id` like "FRA37186"), not database internal IDs, ensuring stable URLs across environments
