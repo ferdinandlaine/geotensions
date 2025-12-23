@@ -37,10 +37,10 @@ class EventsController extends AbstractController
     )]
     #[OA\Parameter(
         name: 'limit',
-        description: 'Nombre maximum de résultats (bornes: 1-5000, défaut: 2500)',
+        description: 'Nombre maximum de résultats (bornes: 1-10000, défaut: 2000)',
         in: 'query',
         required: false,
-        schema: new OA\Schema(type: 'integer', default: 2500, minimum: 1, maximum: 5000, example: 2500)
+        schema: new OA\Schema(type: 'integer', default: 2000, minimum: 1, maximum: 10000, example: 2000)
     )]
     #[OA\Response(
         response: 200,
@@ -107,22 +107,8 @@ class EventsController extends AbstractController
                         type: 'object'
                     )
                 ),
-                new OA\Property(
-                    property: 'metadata',
-                    properties: [
-                        new OA\Property(property: 'total', type: 'integer', example: 15000),
-                        new OA\Property(property: 'truncated', type: 'boolean', example: true),
-                        new OA\Property(
-                            property: 'filters',
-                            properties: [
-                                new OA\Property(property: 'date_from', type: 'string', format: 'date', example: '2024-01-01'),
-                                new OA\Property(property: 'date_to', type: 'string', format: 'date', example: '2024-12-31')
-                            ],
-                            type: 'object'
-                        )
-                    ],
-                    type: 'object'
-                )
+                new OA\Property(property: 'is_truncated', type: 'boolean', example: true),
+                new OA\Property(property: 'total_count', type: 'integer', example: 15000),
             ],
             type: 'object'
         )
@@ -163,13 +149,13 @@ class EventsController extends AbstractController
             'date_to' => $dateTo
         ];
 
-        // Sanitize limit parameter (clamped: 1-5000, default: 2500)
-        $limit = max(1, min(5000, (int) $request->query->get('limit', 2500)));
+        // Sanitize limit parameter (clamped: 1-10000, default: 2000)
+        $limit = max(1, min(10000, (int) $request->query->get('limit', 2000)));
 
         $events = $this->eventRepository->find($filters, $limit);
 
         // Extract total count from window function
-        $total = !empty($events) ? (int)$events[0]['total_count'] : 0;
+        $totalCount = !empty($events) ? (int) $events[0]['total_count'] : 0;
 
         // Transform to GeoJSON format
         $features = [];
@@ -193,11 +179,8 @@ class EventsController extends AbstractController
         $geojson = [
             'type' => 'FeatureCollection',
             'features' => $features,
-            'metadata' => [
-                'total' => $total,
-                'truncated' => $total > $limit,
-                'filters' => $filters
-            ]
+            'total_count' => $totalCount,
+            'is_truncated' => $totalCount > $limit
         ];
 
         return $this->json($geojson);
