@@ -26,11 +26,9 @@
     "noUncheckedSideEffectImports": true,
 
     /* Path aliases */
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "@pages/*": ["pages/*"],
-      "@components/*": ["components/*"],
-      "@assets/*": ["assets/*"]
+      "@/*": ["src/*"]
     }
   }
 }
