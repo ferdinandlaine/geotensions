@@ -18,3 +18,9 @@ export interface EventCollection {
   is_truncated: boolean
   total_count: number
 }
+
+export interface EventFilter {
+  dateFrom: Date
+  dateTo: Date
+  types?: string[]
+}

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { Map, NavigationControl } from 'react-map-gl/maplibre'
 import useEvents from '@/hooks/useEvents'
 import type { MapRef } from 'react-map-gl/maplibre'
-import type { EventFilter } from '@/types/api'
+import type { EventFilter } from '@/types/event'
 import type { StyleSpecification } from 'maplibre-gl'
 import darkMatter from '@/assets/map-styles/dark-matter.json'
 // import positron from '@/assets/map-styles/positron.json'
@@ -12,8 +12,8 @@ function MapView() {
   const mapRef = useRef<MapRef>(null)
 
   const [filter, setFilter] = useState<EventFilter>({
-    date_from: '2024-01-01',
-    date_to: '2024-12-31',
+    dateFrom: new Date('2024-01-01'),
+    dateTo: new Date('2024-12-31'),
   })
 
   const { isPending, error, data: events, isFetching } = useEvents(filter)
