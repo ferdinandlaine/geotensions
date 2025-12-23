@@ -1,0 +1,25 @@
+@layer components {
+  .maplibregl-map {
+    --ctrl-margin: 1rem;
+
+    .maplibregl-ctrl {
+      filter: invert() !important;
+    }
+
+    .maplibregl-ctrl-top-left {
+      margin: var(--ctrl-margin) 0 0 var(--ctrl-margin) !important;
+    }
+
+    .maplibregl-ctrl-top-right {
+      margin: var(--ctrl-margin) var(--ctrl-margin) 0 0 !important;
+    }
+
+    .maplibregl-ctrl-bottom-right {
+      margin: 0 var(--ctrl-margin) var(--ctrl-margin) 0 !important;
+    }
+
+    .maplibregl-ctrl-bottom-left {
+      margin: 0 0 var(--ctrl-margin) var(--ctrl-margin) !important;
+    }
+  }
+}
