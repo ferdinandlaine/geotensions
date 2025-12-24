@@ -6,7 +6,7 @@ use App\Repository\EventRepository;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
 
 class EventsController extends AbstractController
@@ -19,28 +19,46 @@ class EventsController extends AbstractController
     #[OA\Get(
         path: '/api/events',
         summary: 'Lister les événements',
-        description: 'Retourne les événements au format GeoJSON avec filtrage temporel.'
+        description: 'Retourne les événements au format GeoJSON'
+    )]
+    #[OA\Parameter(
+        name: 'bbox',
+        description: 'Bounding box (minLon,minLat,maxLon,maxLat)',
+        in: 'query',
+        required: true,
+        schema: new OA\Schema(type: 'string', example: '-5.5,41.0,10.0,51.5')
     )]
     #[OA\Parameter(
         name: 'date_from',
-        description: 'Date de début (format: AAAA-MM-JJ)',
+        description: 'Date de début (AAAA-MM-JJ)',
         in: 'query',
         required: true,
-        schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-01')
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-26')
     )]
     #[OA\Parameter(
         name: 'date_to',
-        description: 'Date de fin (format: AAAA-MM-JJ)',
+        description: 'Date de fin (AAAA-MM-JJ)',
         in: 'query',
         required: true,
-        schema: new OA\Schema(type: 'string', format: 'date', example: '2024-12-31')
+        schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-27')
+    )]
+    #[OA\Parameter(
+        name: 'type[]',
+        description: 'Type d\'événement',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(
+            type: 'array',
+            items: new OA\Items(type: 'string'),
+        ),
+        example: ['Protests', 'Riots']
     )]
     #[OA\Parameter(
         name: 'limit',
-        description: 'Nombre maximum de résultats (bornes: 1-10000, défaut: 2000)',
+        description: 'Nombre maximum d\'événements (performances)',
         in: 'query',
         required: false,
-        schema: new OA\Schema(type: 'integer', default: 2000, minimum: 1, maximum: 10000, example: 2000)
+        schema: new OA\Schema(type: 'integer', default: 2500, minimum: 1, maximum: 5000, example: 2500)
     )]
     #[OA\Response(
         response: 200,
@@ -54,7 +72,7 @@ class EventsController extends AbstractController
                     items: new OA\Items(
                         properties: [
                             new OA\Property(property: 'type', type: 'string', example: 'Feature'),
-                            new OA\Property(property: 'id', type: 'string', example: 'FRA37186'),
+                            new OA\Property(property: 'id', type: 'string', example: 'FRA30321'),
                             new OA\Property(
                                 property: 'geometry',
                                 properties: [
@@ -63,7 +81,7 @@ class EventsController extends AbstractController
                                         property: 'coordinates',
                                         type: 'array',
                                         items: new OA\Items(type: 'number', format: 'float'),
-                                        example: [2.3522, 48.8566]
+                                        example: [4.7615, 44.1776]
                                     )
                                 ],
                                 type: 'object'
@@ -71,35 +89,36 @@ class EventsController extends AbstractController
                             new OA\Property(
                                 property: 'properties',
                                 properties: [
-                                    new OA\Property(property: 'date', type: 'string', format: 'date', example: '2024-12-15'),
+                                    new OA\Property(property: 'date', type: 'string', format: 'date', example: '2024-01-26'),
                                     new OA\Property(property: 'type', type: 'string', example: 'Protests'),
-                                    new OA\Property(property: 'sub_type', type: 'string', example: 'Peaceful protest'),
-                                    new OA\Property(property: 'disorder_type', type: 'string', example: 'Demonstrations'),
+                                    new OA\Property(property: 'sub_type', type: 'string', example: 'Excessive force against protesters'),
+                                    new OA\Property(property: 'disorder_type', type: 'string', example: 'Political violence; Demonstrations'),
                                     new OA\Property(property: 'actor1', type: 'string', example: 'Protesters (France)'),
-                                    new OA\Property(property: 'actor2', type: 'string', nullable: true, example: null),
+                                    new OA\Property(property: 'actor2', type: 'string', nullable: true, example: 'Rioters (France)'),
                                     new OA\Property(property: 'inter1', type: 'string', example: 'Protesters'),
-                                    new OA\Property(property: 'inter2', type: 'string', nullable: true, example: null),
-                                    new OA\Property(property: 'assoc_actor_1', type: 'string', nullable: true, example: 'Attac; CGT: General Confederation of Labor (France); Labor Group (France)'),
-                                    new OA\Property(property: 'assoc_actor_2', type: 'string', nullable: true, example: null),
-                                    new OA\Property(property: 'interaction', type: 'string', example: 'Protesters only'),
+                                    new OA\Property(property: 'inter2', type: 'string', nullable: true, example: 'Rioters'),
+                                    new OA\Property(property: 'assoc_actor_1', type: 'string', nullable: true, example: 'Farmers (France); FNSEA: National Federation of Farmers Unions; JA: Young Farmers'),
+                                    new OA\Property(property: 'assoc_actor_2', type: 'string', nullable: true, example: 'Labor Group (France)'),
+                                    new OA\Property(property: 'interaction', type: 'string', example: 'Rioters-Protesters'),
                                     new OA\Property(property: 'iso', type: 'integer', example: 250),
                                     new OA\Property(property: 'region', type: 'string', example: 'Europe'),
                                     new OA\Property(property: 'country', type: 'string', example: 'France'),
-                                    new OA\Property(property: 'admin1', type: 'string', example: 'Normandie'),
-                                    new OA\Property(property: 'admin2', type: 'string', nullable: true, example: 'Eure'),
-                                    new OA\Property(property: 'admin3', type: 'string', nullable: true, example: 'Les Andelys'),
-                                    new OA\Property(property: 'location', type: 'string', example: 'Etrepagny'),
-                                    new OA\Property(property: 'latitude', type: 'number', format: 'double', example: 49.3165),
-                                    new OA\Property(property: 'longitude', type: 'number', format: 'double', example: 1.6123),
+                                    new OA\Property(property: 'admin1', type: 'string', example: 'Provence-Alpes-Cote d\'Azur'),
+                                    new OA\Property(property: 'admin2', type: 'string', nullable: true, example: 'Vaucluse'),
+                                    new OA\Property(property: 'admin3', type: 'string', nullable: true, example: 'Carpentras'),
+                                    new OA\Property(property: 'location', type: 'string', example: 'Piolenc'),
+                                    new OA\Property(property: 'latitude', type: 'number', format: 'double', example: 44.1776),
+                                    new OA\Property(property: 'longitude', type: 'number', format: 'double', example: 4.7615),
                                     new OA\Property(property: 'geo_precision', type: 'integer', example: 1),
-                                    new OA\Property(property: 'civilian_targeting', type: 'boolean', example: false),
+                                    new OA\Property(property: 'civilian_targeting', type: 'boolean', example: true),
                                     new OA\Property(property: 'fatalities', type: 'integer', example: 0),
                                     new OA\Property(property: 'source', type: 'string', example: 'France 3 Regions'),
                                     new OA\Property(property: 'source_scale', type: 'string', example: 'National'),
-                                    new OA\Property(property: 'notes', type: 'string', example: 'On 15 December 2024, at the call of CGT, Attac, NPA, LFI, PCF, and LDH, around 50 people gathered outside the town hall in Etrepagny (Normandie) to protest against far-right ideology.'),
-                                    new OA\Property(property: 'tags', type: 'string', nullable: true, example: 'crowd size=around 50'),
-                                    new OA\Property(property: 'imported_at', type: 'string', format: 'date-time', example: '2024-12-15T10:30:00+00:00'),
-                                    new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', example: '2024-12-15T10:30:00+00:00')
+                                    new OA\Property(property: 'notes', type: 'string', example: 'On 26 January 2024, in the morning, farmers set up a road blockade on the A7 highway in Piolenc (Provence-Alpes-Cote d\'Azur). The event was part of a nationwide farmers\' demonstration movement called by FNSEA and JA against rising production costs, stricter environmental norms restricting the use of pesticides, foreign imports, and bureaucratic constraints. One demonstrator was knocked down by a lorry attempting to break through the roadblock after the farmers blocking the road started to inspect the lorry\'s cargo, sustaining mild injuries to his wrist.'),
+                                    new OA\Property(property: 'tags', type: 'string', nullable: true, example: 'crowd size=no report'),
+                                    new OA\Property(property: 'timestamp', type: 'integer', example: 1712695337),
+                                    new OA\Property(property: 'imported_at', type: 'string', format: 'date-time', example: '2024-04-09T19:28:57Z'),
+                                    new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', example: '2024-04-09T19:28:57Z')
                                 ],
                                 type: 'object'
                             )
@@ -107,27 +126,31 @@ class EventsController extends AbstractController
                         type: 'object'
                     )
                 ),
-                new OA\Property(property: 'is_truncated', type: 'boolean', example: true),
-                new OA\Property(property: 'total_count', type: 'integer', example: 15000),
+                new OA\Property(property: 'is_truncated', type: 'boolean', example: false),
+                new OA\Property(property: 'total_count', type: 'integer', example: 1),
             ],
             type: 'object'
         )
     )]
-    public function getEvents(Request $request): JsonResponse
-    {
-        $dateFrom = $request->query->get('date_from');
-        $dateTo = $request->query->get('date_to');
+    public function getEvents(
+        #[MapQueryParameter] string $bbox,
+        #[MapQueryParameter] string $date_from,
+        #[MapQueryParameter] string $date_to,
+        #[MapQueryParameter] ?array $type,
+        #[MapQueryParameter] int $limit = 2500
+    ): JsonResponse {
+        // Parse bbox (format: minLon,minLat,maxLon,maxLat)
+        $bbox = explode(',', $bbox);
+        if (count($bbox) !== 4) {
+            return $this->json([
+                'error' => 'invalid_bbox',
+                'message' => 'bbox must be in format: minLon,minLat,maxLon,maxLat'
+            ], 400);
+        }
 
         // Validate date parameters
-        $dates = ['date_from' => $dateFrom, 'date_to' => $dateTo];
+        $dates = ['date_from' => $date_from, 'date_to' => $date_to];
         foreach ($dates as $key => $value) {
-            if (!$value) {
-                return $this->json([
-                    'error' => 'missing_parameter',
-                    'message' => "Missing required parameter: {$key}"
-                ], 400);
-            }
-
             $dateObj = \DateTime::createFromFormat('Y-m-d', $value);
             if (!$dateObj || $dateObj->format('Y-m-d') !== $value) {
                 return $this->json([
@@ -137,7 +160,7 @@ class EventsController extends AbstractController
             }
         }
 
-        if ($dateFrom > $dateTo) {
+        if ($date_from > $date_to) {
             return $this->json([
                 'error' => 'invalid_date_range',
                 'message' => 'date_from cannot exceed date_to'
@@ -145,12 +168,17 @@ class EventsController extends AbstractController
         }
 
         $filters = [
-            'date_from' => $dateFrom,
-            'date_to' => $dateTo
+            'bbox' => $bbox,
+            'date_from' => $date_from,
+            'date_to' => $date_to
         ];
 
-        // Sanitize limit parameter (clamped: 1-10000, default: 2000)
-        $limit = max(1, min(10000, (int) $request->query->get('limit', 2000)));
+        if ($type && ($type = array_values(array_filter($type)))) {
+            $filters['types'] = $type;
+        }
+
+        // Sanitize limit parameter (clamped: 1-5000)
+        $limit = max(1, min(5000, $limit));
 
         $events = $this->eventRepository->find($filters, $limit);
 
@@ -164,6 +192,12 @@ class EventsController extends AbstractController
 
             // Extract acled_id for Feature ID
             $acledId = $event['acled_id'];
+
+            // Format timestamps without milliseconds (ISO 8601 with Z for UTC)
+            $importedAt = new \DateTime($event['imported_at']);
+            $updatedAt = new \DateTime($event['updated_at']);
+            $event['imported_at'] = $importedAt->format('Y-m-d\TH:i:s\Z');
+            $event['updated_at'] = $updatedAt->format('Y-m-d\TH:i:s\Z');
 
             // Remove from properties to avoid duplication
             unset($event['geom'], $event['acled_id'], $event['id'], $event['total_count']);
@@ -179,8 +213,8 @@ class EventsController extends AbstractController
         $geojson = [
             'type' => 'FeatureCollection',
             'features' => $features,
+            'is_truncated' => $totalCount > $limit,
             'total_count' => $totalCount,
-            'is_truncated' => $totalCount > $limit
         ];
 
         return $this->json($geojson);

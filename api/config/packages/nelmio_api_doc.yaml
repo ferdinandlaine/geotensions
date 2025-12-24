@@ -2,8 +2,8 @@ nelmio_api_doc:
     documentation:
         info:
             title: Geotensions API
-            description: REST API for ACLED event data with geospatial and temporal filtering.
-            version: 0.1.0
+            description: API REST exploitant ACLED pour visualisation cartographique.
+            version: 0.2.0
     areas:
         path_patterns:
             - ^/api(?!/doc$)

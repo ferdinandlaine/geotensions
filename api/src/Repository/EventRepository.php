@@ -58,25 +58,16 @@ class EventRepository
         )
             ->from('events');
 
-        $this->applyFilters($qb, $filters);
+        // Apply filters
+        if (isset($filters['bbox'])) {
+            [$minLon, $minLat, $maxLon, $maxLat] = $filters['bbox'];
+            $qb->andWhere('geom && ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)')
+                ->setParameter('minLon', $minLon)
+                ->setParameter('minLat', $minLat)
+                ->setParameter('maxLon', $maxLon)
+                ->setParameter('maxLat', $maxLat);
+        }
 
-        $qb->orderBy('date', 'DESC')
-            ->addOrderBy('id', 'DESC')
-            ->setMaxResults($limit);
-
-        $result = $qb->executeQuery();
-        return $result->fetchAllAssociative();
-    }
-
-    /**
-     * Apply filters to query builder
-     *
-     * @param \Doctrine\DBAL\Query\QueryBuilder $qb
-     * @param array $filters
-     * @return void
-     */
-    private function applyFilters($qb, array $filters): void
-    {
         if (isset($filters['date_from'])) {
             $qb->andWhere('date >= :date_from')
                 ->setParameter('date_from', $filters['date_from']);
@@ -86,5 +77,17 @@ class EventRepository
             $qb->andWhere('date <= :date_to')
                 ->setParameter('date_to', $filters['date_to']);
         }
+
+        if (isset($filters['types'])) {
+            $qb->andWhere($qb->expr()->in('type', ':types'))
+                ->setParameter('types', $filters['types'], \Doctrine\DBAL\ArrayParameterType::STRING);
+        }
+
+        $qb->orderBy('date', 'DESC')
+            ->addOrderBy('id', 'DESC')
+            ->setMaxResults($limit);
+
+        $result = $qb->executeQuery();
+        return $result->fetchAllAssociative();
     }
 }
