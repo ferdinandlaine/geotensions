@@ -1,8 +1,9 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useCallback, useMemo } from 'react'
 import { Map, NavigationControl } from 'react-map-gl/maplibre'
 import useEvents from '@/hooks/useEvents'
 import type { MapRef } from 'react-map-gl/maplibre'
 import type { EventFilter } from '@/types/event'
+import type { BBox } from '@/types/geo'
 import type { StyleSpecification } from 'maplibre-gl'
 import darkMatter from '@/assets/map-styles/dark-matter.json'
 // import positron from '@/assets/map-styles/positron.json'
@@ -10,13 +11,37 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 
 function MapView() {
   const mapRef = useRef<MapRef>(null)
+  const [bbox, setBbox] = useState<BBox | null>(null)
+  const [dateFrom, setDateFrom] = useState<Date>(new Date('2024-01-26'))
+  const [dateTo, setDateTo] = useState<Date>(new Date('2024-01-27'))
+  const [types, setTypes] = useState<string[]>(['Protests', 'Riots'])
 
-  const [filter, setFilter] = useState<EventFilter>({
-    dateFrom: new Date('2024-01-01'),
-    dateTo: new Date('2024-12-31'),
-  })
+  const updateBbox = useCallback(() => {
+    if (!mapRef.current) return
 
-  const { isPending, error, data: events, isFetching } = useEvents(filter)
+    const map = mapRef.current.getMap()
+    const bounds = map.getBounds()
+
+    setBbox({
+      minLon: bounds.getWest(),
+      minLat: bounds.getSouth(),
+      maxLon: bounds.getEast(),
+      maxLat: bounds.getNorth(),
+    })
+  }, [])
+
+  const filter = useMemo<EventFilter | undefined>(() => {
+    if (!bbox) return
+
+    return {
+      bbox,
+      dateFrom,
+      dateTo,
+      types,
+    }
+  }, [bbox, dateFrom, dateTo, types])
+
+  const { data: events, isLoading, isPending, error } = useEvents(filter)
 
   return (
     <div className="relative h-full w-full">
@@ -31,6 +56,8 @@ function MapView() {
         }}
         minZoom={2}
         attributionControl={false}
+        onLoad={updateBbox}
+        onMoveEnd={updateBbox}
       >
         <NavigationControl position="top-right" />
 

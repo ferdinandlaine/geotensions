@@ -1,3 +1,5 @@
+import type { BBox } from './geo'
+
 export interface Event {
   type: 'Feature'
   id: string
@@ -20,6 +22,7 @@ export interface EventCollection {
 }
 
 export interface EventFilter {
+  bbox: BBox
   dateFrom: Date
   dateTo: Date
   types?: string[]
