@@ -26,7 +26,7 @@ class EventsController extends AbstractController
         description: 'Bounding box (minLon,minLat,maxLon,maxLat)',
         in: 'query',
         required: true,
-        schema: new OA\Schema(type: 'string', example: '-5.5,41.0,10.0,51.5')
+        schema: new OA\Schema(type: 'string', example: '4.75,44.0,5.0,44.25')
     )]
     #[OA\Parameter(
         name: 'date_from',
@@ -55,7 +55,7 @@ class EventsController extends AbstractController
     )]
     #[OA\Parameter(
         name: 'limit',
-        description: 'Nombre maximum d\'événements (performances)',
+        description: 'Nombre maximum d\'événements',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer', default: 2500, minimum: 1, maximum: 5000, example: 2500)
