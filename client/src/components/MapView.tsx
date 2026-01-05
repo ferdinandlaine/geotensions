@@ -1,68 +1,85 @@
 import { useRef, useState, useCallback, useMemo } from 'react'
-import { Map, NavigationControl } from 'react-map-gl/maplibre'
-import useEvents from '@/hooks/useEvents'
-import type { MapRef } from 'react-map-gl/maplibre'
-import type { EventFilter } from '@/types/event'
-import type { BBox } from '@/types/geo'
-import type { StyleSpecification } from 'maplibre-gl'
+import { Map, type LngLatBounds, type MapRef, type StyleSpecification } from 'react-map-gl/maplibre'
 import darkMatter from '@/assets/map-styles/dark-matter.json'
-// import positron from '@/assets/map-styles/positron.json'
-import 'maplibre-gl/dist/maplibre-gl.css'
+import useEvents from '@/hooks/useEvents'
+import type { EventsQuery } from '@/types/event'
+import { MapControls } from './MapControls'
+import { Minimap } from './Minimap'
+
+const INITIAL_ZOOM = 4
+const MAX_ZOOM = 16
+const MIN_ZOOM = 2
 
 function MapView() {
   const mapRef = useRef<MapRef>(null)
-  const [bbox, setBbox] = useState<BBox | null>(null)
-  const [dateFrom, setDateFrom] = useState<Date>(new Date('2024-01-26'))
-  const [dateTo, setDateTo] = useState<Date>(new Date('2024-01-27'))
-  const [types, setTypes] = useState<string[]>(['Protests', 'Riots'])
+  const [bounds, setBounds] = useState<LngLatBounds | null>(null)
+  const [zoom, setZoom] = useState(INITIAL_ZOOM)
+
+  /* Filters */
+  const [dateFrom, setDateFrom] = useState(new Date('2024-01-26'))
+  const [dateTo, setDateTo] = useState(new Date('2024-01-27'))
+  const [types, setTypes] = useState<string[]>([])
 
   const updateBbox = useCallback(() => {
-    if (!mapRef.current) return
+    const map = mapRef.current?.getMap()
+    if (!map) return
 
-    const map = mapRef.current.getMap()
-    const bounds = map.getBounds()
+    setBounds(map.getBounds())
+  }, [])
 
-    setBbox({
-      minLon: bounds.getWest(),
-      minLat: bounds.getSouth(),
-      maxLon: bounds.getEast(),
-      maxLat: bounds.getNorth(),
+  const updateZoom = useCallback(() => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+
+    setZoom(map.getZoom())
+  }, [])
+
+  const handleMinimapNavigate = useCallback((lng: number, lat: number) => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+
+    map.flyTo({
+      center: [lng, lat],
     })
   }, [])
 
-  const filter = useMemo<EventFilter | undefined>(() => {
-    if (!bbox) return
+  const query = useMemo<EventsQuery | undefined>(() => {
+    if (!bounds) return
 
     return {
-      bbox,
-      dateFrom,
-      dateTo,
-      types,
+      bbox: bounds,
+      filter: {
+        dateFrom,
+        dateTo,
+        types,
+      },
     }
-  }, [bbox, dateFrom, dateTo, types])
+  }, [bounds, dateFrom, dateTo, types])
 
-  const { data: events, isLoading, isPending, error } = useEvents(filter)
+  const { data: events, isLoading, isPending, error } = useEvents(query)
 
   return (
-    <div className="relative h-full w-full">
+    <>
       <Map
         ref={mapRef}
         mapStyle={darkMatter as unknown as StyleSpecification}
-        projection="globe"
         initialViewState={{
           longitude: 2.35,
           latitude: 48.85,
-          zoom: 5,
+          zoom: INITIAL_ZOOM,
         }}
-        minZoom={2}
+        maxZoom={MAX_ZOOM}
+        minZoom={MIN_ZOOM}
+        dragRotate={false}
         attributionControl={false}
         onLoad={updateBbox}
         onMoveEnd={updateBbox}
-      >
-        <NavigationControl position="top-right" />
+        onZoom={updateZoom}
+      />
 
+      <div className="absolute top-4 left-4">
         {events && (
-          <pre className="fixed top-4 left-4 rounded-sm bg-black px-2 py-1.5 text-gray-200 ring-2 ring-white/10">
+          <pre className="card bg-neutral-900 px-2 py-1 text-xs text-neutral-100">
             Event count: {events.features.length}
             <br />
             Is truncated: {`${events.is_truncated}`}
@@ -70,8 +87,16 @@ function MapView() {
             Total events: {events.total_count}
           </pre>
         )}
-      </Map>
-    </div>
+      </div>
+
+      <div className="absolute top-4 right-4">
+        <MapControls mapRef={mapRef} currentZoom={zoom} maxZoom={MAX_ZOOM} minZoom={MIN_ZOOM} />
+      </div>
+
+      <div className="absolute bottom-4 left-4">
+        <Minimap viewportBounds={bounds} onNavigate={handleMinimapNavigate} />
+      </div>
+    </>
   )
 }
 

@@ -1,11 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { fetchEvents } from '@/api/events'
-import type { EventFilter } from '@/types/event'
+import type { EventsQuery } from '@/types/event'
 
-export default function (filter: EventFilter | undefined) {
+export default function (query: EventsQuery | undefined) {
   return useQuery({
-    queryKey: ['events', filter],
-    queryFn: () => fetchEvents(filter!),
-    enabled: !!filter,
+    queryKey: ['events', query],
+    queryFn: () => {
+      if (!query) throw new Error('Query is not defined!')
+      return fetchEvents(query)
+    },
+    enabled: !!query,
   })
 }

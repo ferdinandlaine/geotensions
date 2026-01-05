@@ -1,25 +1,12 @@
 @layer components {
-  .maplibregl-map {
-    --ctrl-margin: 1rem;
+  /* MapLibre GL overrides */
+  [mapboxgl-children] {
+    display: none;
+  }
 
-    .maplibregl-ctrl {
-      filter: invert() !important;
-    }
-
-    .maplibregl-ctrl-top-left {
-      margin: var(--ctrl-margin) 0 0 var(--ctrl-margin) !important;
-    }
-
-    .maplibregl-ctrl-top-right {
-      margin: var(--ctrl-margin) var(--ctrl-margin) 0 0 !important;
-    }
-
-    .maplibregl-ctrl-bottom-right {
-      margin: 0 var(--ctrl-margin) var(--ctrl-margin) 0 !important;
-    }
-
-    .maplibregl-ctrl-bottom-left {
-      margin: 0 0 var(--ctrl-margin) var(--ctrl-margin) !important;
-    }
+  .card {
+    border: 1px solid theme('colors.neutral.700');
+    border-radius: theme('borderRadius.sm');
+    overflow: hidden;
   }
 }

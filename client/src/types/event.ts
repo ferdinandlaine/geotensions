@@ -1,4 +1,4 @@
-import type { BBox } from './geo'
+import type { LngLatBounds } from 'maplibre-gl'
 
 export interface Event {
   type: 'Feature'
@@ -21,9 +21,13 @@ export interface EventCollection {
   total_count: number
 }
 
+export interface EventsQuery {
+  bbox: LngLatBounds
+  filter: EventFilter
+}
+
 export interface EventFilter {
-  bbox: BBox
   dateFrom: Date
   dateTo: Date
-  types?: string[]
+  types: string[]
 }

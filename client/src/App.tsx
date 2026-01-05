@@ -6,12 +6,10 @@ const queryClient = new QueryClient()
 
 function App() {
   return (
-    <div className="h-screen bg-black/95">
-      <QueryClientProvider client={queryClient}>
-        <ReactQueryDevtools />
-        <MapView />
-      </QueryClientProvider>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <ReactQueryDevtools />
+      <MapView />
+    </QueryClientProvider>
   )
 }
 

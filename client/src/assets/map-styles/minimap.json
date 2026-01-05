@@ -1,0 +1,45 @@
+{
+    "version": 8,
+    "id": "minimap",
+    "name": "Minimap",
+    "sources": {
+        "openmaptiles": {
+            "type": "vector",
+            "url": "https://openmaptiles.data.gouv.fr/data/planet-vector.json"
+        }
+    },
+    "layers": [
+        {
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "rgb(12,12,12)"
+            }
+        },
+        {
+            "id": "water",
+            "type": "fill",
+            "source": "openmaptiles",
+            "source-layer": "water",
+            "paint": {
+                "fill-color": "rgb(27, 27, 29)"
+            }
+        },
+        {
+            "id": "boundary_country",
+            "type": "line",
+            "source": "openmaptiles",
+            "source-layer": "boundary",
+            "filter": [
+                "==",
+                "admin_level",
+                2
+            ],
+            "paint": {
+                "line-color": "rgb(60, 60, 62)",
+                "line-width": 1,
+                "line-opacity": 0.5
+            }
+        }
+    ]
+}
