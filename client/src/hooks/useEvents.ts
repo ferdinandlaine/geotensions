@@ -10,5 +10,6 @@ export default function (query: EventsQuery | undefined) {
       return fetchEvents(query)
     },
     enabled: !!query,
+    placeholderData: (previousData) => previousData,
   })
 }

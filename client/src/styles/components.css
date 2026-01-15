@@ -1,7 +1,16 @@
 @layer components {
-  /* MapLibre GL overrides */
-  [mapboxgl-children] {
-    display: none;
+  .maplibregl-map {
+    .maplibregl-interactive {
+      cursor: grab;
+
+      &:active {
+        cursor: grabbing;
+      }
+    }
+
+    [mapboxgl-children] {
+      display: none;
+    }
   }
 
   .card {

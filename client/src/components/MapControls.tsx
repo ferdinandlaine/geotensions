@@ -3,12 +3,11 @@ import { IconMinus, IconPlus } from '@tabler/icons-react'
 
 interface MapControlsProps {
   mapRef: React.RefObject<MapRef | null>
-  currentZoom: number
-  maxZoom: number
-  minZoom: number
+  canZoomIn: boolean
+  canZoomOut: boolean
 }
 
-export function MapControls({ mapRef, currentZoom, maxZoom, minZoom }: MapControlsProps) {
+export function MapControls({ mapRef, canZoomIn, canZoomOut }: MapControlsProps) {
   const zoomIn = () => {
     mapRef.current?.getMap()?.zoomIn()
   }
@@ -22,7 +21,7 @@ export function MapControls({ mapRef, currentZoom, maxZoom, minZoom }: MapContro
       <button
         className="cursor-pointer p-1 text-neutral-100 disabled:cursor-not-allowed disabled:text-neutral-500"
         aria-label="Zoom in"
-        disabled={currentZoom >= maxZoom}
+        disabled={!canZoomIn}
         onClick={zoomIn}
       >
         <IconPlus />
@@ -31,7 +30,7 @@ export function MapControls({ mapRef, currentZoom, maxZoom, minZoom }: MapContro
       <button
         className="cursor-pointer p-1 text-neutral-100 disabled:cursor-not-allowed disabled:text-neutral-500"
         aria-label="Zoom out"
-        disabled={currentZoom <= minZoom}
+        disabled={!canZoomOut}
         onClick={zoomOut}
       >
         <IconMinus />

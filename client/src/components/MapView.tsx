@@ -5,15 +5,13 @@ import useEvents from '@/hooks/useEvents'
 import type { EventsQuery } from '@/types/event'
 import { MapControls } from './MapControls'
 import { Minimap } from './Minimap'
-
-const INITIAL_ZOOM = 4
-const MAX_ZOOM = 16
-const MIN_ZOOM = 2
+import { MAP_CONFIG } from '@/config/map'
+import { isAtMaxBoundsLimit } from '@/utils/geo'
 
 function MapView() {
   const mapRef = useRef<MapRef>(null)
   const [bounds, setBounds] = useState<LngLatBounds | null>(null)
-  const [zoom, setZoom] = useState(INITIAL_ZOOM)
+  const [zoom, setZoom] = useState(MAP_CONFIG.INITIAL_ZOOM)
 
   /* Filters */
   const [dateFrom, setDateFrom] = useState(new Date('2024-01-26'))
@@ -32,15 +30,22 @@ function MapView() {
     if (!map) return
 
     setZoom(map.getZoom())
+    setBounds(map.getBounds())
   }, [])
 
   const handleMinimapNavigate = useCallback((lng: number, lat: number) => {
     const map = mapRef.current?.getMap()
     if (!map) return
 
-    map.flyTo({
-      center: [lng, lat],
-    })
+    // Stop any ongoing animation to prevent race conditions
+    map.stop().easeTo({ center: [lng, lat] })
+  }, [])
+
+  const handleMinimapDrag = useCallback((lng: number, lat: number) => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+
+    map.jumpTo({ center: [lng, lat] })
   }, [])
 
   const query = useMemo<EventsQuery | undefined>(() => {
@@ -58,21 +63,29 @@ function MapView() {
 
   const { data: events, isLoading, isPending, error } = useEvents(query)
 
+  // Calculate if zoom controls should be enabled
+  const atMaxBoundsLimit = isAtMaxBoundsLimit(bounds, MAP_CONFIG.MAX_BOUNDS)
+  const canZoomIn = zoom < MAP_CONFIG.MAX_ZOOM
+  const canZoomOut = zoom > MAP_CONFIG.MIN_ZOOM && !atMaxBoundsLimit
+
   return (
     <>
       <Map
         ref={mapRef}
         mapStyle={darkMatter as unknown as StyleSpecification}
         initialViewState={{
-          longitude: 2.35,
-          latitude: 48.85,
-          zoom: INITIAL_ZOOM,
+          longitude: MAP_CONFIG.INITIAL_VIEW_STATE.longitude,
+          latitude: MAP_CONFIG.INITIAL_VIEW_STATE.latitude,
+          zoom: MAP_CONFIG.INITIAL_ZOOM,
         }}
-        maxZoom={MAX_ZOOM}
-        minZoom={MIN_ZOOM}
+        minZoom={MAP_CONFIG.MIN_ZOOM}
+        maxZoom={MAP_CONFIG.MAX_ZOOM}
+        maxBounds={MAP_CONFIG.MAX_BOUNDS}
         dragRotate={false}
         attributionControl={false}
+        renderWorldCopies={false}
         onLoad={updateBbox}
+        onMove={updateBbox}
         onMoveEnd={updateBbox}
         onZoom={updateZoom}
       />
@@ -85,16 +98,30 @@ function MapView() {
             Is truncated: {`${events.is_truncated}`}
             <br />
             Total events: {events.total_count}
+            <br />
+            Zoom: {zoom.toFixed(2)}
+            <br />
+            Bounds: {bounds ? 'loaded' : 'null'}
+            <br />
+            atMaxBoundsLimit: {String(atMaxBoundsLimit)}
+            <br />
+            canZoomOut: {String(canZoomOut)}
+            <br />
+            canZoomIn: {String(canZoomIn)}
           </pre>
         )}
       </div>
 
       <div className="absolute top-4 right-4">
-        <MapControls mapRef={mapRef} currentZoom={zoom} maxZoom={MAX_ZOOM} minZoom={MIN_ZOOM} />
+        <MapControls mapRef={mapRef} canZoomIn={canZoomIn} canZoomOut={canZoomOut} />
       </div>
 
       <div className="absolute bottom-4 left-4">
-        <Minimap viewportBounds={bounds} onNavigate={handleMinimapNavigate} />
+        <Minimap
+          viewportBounds={bounds}
+          onNavigate={handleMinimapNavigate}
+          onDrag={handleMinimapDrag}
+        />
       </div>
     </>
   )
