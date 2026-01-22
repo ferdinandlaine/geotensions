@@ -59,6 +59,13 @@ function MapView({ children, onBoundsChange }: PropsWithChildren<MapViewProps>) 
     map.stop().setCenter([lng, lat])
   }, [])
 
+  const handleMinimapZoom = useCallback((delta: number) => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+
+    map.setZoom(map.getZoom() + delta * 0.05)
+  }, [])
+
   const atMaxBoundsLimit = isAtMaxBoundsLimit(bounds, MAP_CONFIG.MAX_BOUNDS)
   const canZoomIn = zoom < MAP_CONFIG.MAX_ZOOM
   const canZoomOut = zoom > MAP_CONFIG.MIN_ZOOM && !atMaxBoundsLimit
@@ -90,8 +97,11 @@ function MapView({ children, onBoundsChange }: PropsWithChildren<MapViewProps>) 
         <div className="flex flex-col gap-2">
           <Minimap
             viewportBounds={bounds}
+            canZoomIn={canZoomIn}
+            canZoomOut={canZoomOut}
             onClick={handleMinimapClick}
             onDrag={handleMinimapDrag}
+            onZoom={handleMinimapZoom}
           />
 
           {import.meta.env.DEV && (

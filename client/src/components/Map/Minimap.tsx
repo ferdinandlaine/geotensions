@@ -11,6 +11,7 @@ import minimap from '@/assets/map-styles/minimap.json'
 import { MAP_CONFIG } from '@/config/map'
 import { THEME } from '@/config/theme'
 import { useDrag } from '@/hooks/useDrag'
+import { useWheel } from '@/hooks/useWheel'
 
 /**
  * Calculate aspect ratio for a bounding box in Mercator projection
@@ -58,7 +59,7 @@ interface Props {
 const aspectRatio = calculateMercatorAspectRatio(MAP_CONFIG.MAX_BOUNDS)
 const RECTANGLE_MIN_SIZE = 4 // threshold below which rectangle is too small
 
-function Minimap({ viewportBounds, onClick, onDrag }: Props) {
+function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoom }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const minimapRef = useRef<MapRef>(null)
 
@@ -96,6 +97,15 @@ function Minimap({ viewportBounds, onClick, onDrag }: Props) {
     },
     {
       threshold: 5,
+    }
+  )
+
+  useWheel(
+    containerRef,
+    { onWheel: onZoom },
+    {
+      canScrollUp: canZoomIn,
+      canScrollDown: canZoomOut,
     }
   )
 
