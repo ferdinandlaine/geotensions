@@ -148,6 +148,48 @@ class EventsController extends AbstractController
             ], 400);
         }
 
+        // Validate bbox coordinates are valid numbers
+        foreach ($bbox as $coord) {
+            if (!is_numeric($coord)) {
+                return $this->json([
+                    'error' => 'invalid_bbox',
+                    'message' => 'bbox coordinates must be valid numbers'
+                ], 400);
+            }
+        }
+
+        $bbox = array_map('floatval', $bbox);
+        [$minLon, $minLat, $maxLon, $maxLat] = $bbox;
+
+        // Validate coordinate ranges
+        if ($minLon < -180 || $minLon > 180 || $maxLon < -180 || $maxLon > 180) {
+            return $this->json([
+                'error' => 'invalid_bbox',
+                'message' => 'longitude must be between -180 and 180'
+            ], 400);
+        }
+
+        if ($minLat < -90 || $minLat > 90 || $maxLat < -90 || $maxLat > 90) {
+            return $this->json([
+                'error' => 'invalid_bbox',
+                'message' => 'latitude must be between -90 and 90'
+            ], 400);
+        }
+
+        if ($minLon >= $maxLon) {
+            return $this->json([
+                'error' => 'invalid_bbox',
+                'message' => 'minLon must be less than maxLon'
+            ], 400);
+        }
+
+        if ($minLat >= $maxLat) {
+            return $this->json([
+                'error' => 'invalid_bbox',
+                'message' => 'minLat must be less than maxLat'
+            ], 400);
+        }
+
         // Validate date parameters
         $dates = ['date_from' => $date_from, 'date_to' => $date_to];
         foreach ($dates as $key => $value) {
