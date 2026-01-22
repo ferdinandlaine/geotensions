@@ -1,5 +1,5 @@
-import type { MapRef } from 'react-map-gl/maplibre'
 import { IconMinus, IconPlus } from '@tabler/icons-react'
+import type { MapRef } from 'react-map-gl/maplibre'
 
 interface MapControlsProps {
   mapRef: React.RefObject<MapRef | null>
@@ -7,7 +7,7 @@ interface MapControlsProps {
   canZoomOut: boolean
 }
 
-export function MapControls({ mapRef, canZoomIn, canZoomOut }: MapControlsProps) {
+function MapControls({ mapRef, canZoomIn, canZoomOut }: MapControlsProps) {
   const zoomIn = () => {
     mapRef.current?.getMap()?.zoomIn()
   }
@@ -24,7 +24,7 @@ export function MapControls({ mapRef, canZoomIn, canZoomOut }: MapControlsProps)
         disabled={!canZoomIn}
         onClick={zoomIn}
       >
-        <IconPlus />
+        <IconPlus size={16} />
       </button>
 
       <button
@@ -33,8 +33,10 @@ export function MapControls({ mapRef, canZoomIn, canZoomOut }: MapControlsProps)
         disabled={!canZoomOut}
         onClick={zoomOut}
       >
-        <IconMinus />
+        <IconMinus size={16} />
       </button>
     </div>
   )
 }
+
+export default MapControls

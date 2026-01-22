@@ -15,7 +15,7 @@
 
   .card {
     border: 1px solid theme('colors.neutral.700');
-    border-radius: theme('borderRadius.sm');
-    overflow: hidden;
+    border-radius: theme('borderRadius.md');
+    corner-shape: squircle;
   }
 }

@@ -1,13 +1,17 @@
-import { fetchApi } from './client'
-import type { EventCollection, EventsQuery, EventFilter } from '@/types/event'
+import type { EventCollection, EventFilter, EventsQuery } from '@/types/event'
 
-export function fetchEvents(query: EventsQuery) {
+import { fetchApi } from './client'
+
+export function fetchEvents(query: EventsQuery, signal?: AbortSignal) {
   const { bbox, filter } = query
-  const bboxString = bbox.toArray().flat().join(',')
-  return fetchApi<EventCollection>(`/events?bbox=${bboxString}&${toFilterParams(filter)}`)
+
+  return fetchApi<EventCollection>(
+    `/events?bbox=${bbox.join(',')}&${filterToParams(filter)}`,
+    signal
+  )
 }
 
-function toFilterParams(filter: EventFilter): URLSearchParams {
+function filterToParams(filter: EventFilter): URLSearchParams {
   const { dateFrom, dateTo, types } = filter
 
   const params = new URLSearchParams({
