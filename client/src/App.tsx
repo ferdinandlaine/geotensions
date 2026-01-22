@@ -12,8 +12,8 @@ function App() {
     to: new Date('2024-01-27'),
   }
 
-  const [dateFrom, setDateFrom] = useState(initialRange.from)
-  const [dateTo, setDateTo] = useState(initialRange.to)
+  const [dateFrom] = useState(initialRange.from)
+  const [dateTo] = useState(initialRange.to)
   const [bounds, setBounds] = useState<LngLatBounds | null>(null)
 
   const query = useMemo<EventsQuery | undefined>(() => {
