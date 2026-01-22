@@ -261,4 +261,33 @@ class EventsController extends AbstractController
 
         return $this->json($geojson);
     }
+
+    #[Route('/types', name: 'types', methods: ['GET'])]
+    #[OA\Get(
+        path: '/api/types',
+        summary: 'Lister les types d\'événements',
+        description: 'Retourne tous les types d\'événements distincts avec leurs sous-types'
+    )]
+    #[OA\Response(
+        response: 200,
+        description: 'Types d\'événements avec leurs sous-types',
+        content: new OA\JsonContent(
+            type: 'object',
+            additionalProperties: new OA\AdditionalProperties(
+                type: 'array',
+                items: new OA\Items(type: 'string')
+            ),
+            example: [
+                'Battles' => ['Armed clash', 'Government regains territory', 'Non-state actor overtakes territory'],
+                'Protests' => ['Excessive force against protesters', 'Peaceful protest', 'Protest with intervention'],
+                'Riots' => ['Mob violence', 'Violent demonstration']
+            ]
+        )
+    )]
+    public function getTypes(): JsonResponse
+    {
+        $types = $this->eventRepository->findDistinctTypes();
+
+        return $this->json($types);
+    }
 }

@@ -90,4 +90,35 @@ class EventRepository
         $result = $qb->executeQuery();
         return $result->fetchAllAssociative();
     }
+
+    /**
+     * Find all distinct event types with their subtypes
+     *
+     * @return array Associative array with types as keys and subtypes arrays as values
+     */
+    public function findDistinctTypes(): array
+    {
+        $qb = $this->connection->createQueryBuilder();
+
+        $qb->select('DISTINCT type', 'sub_type')
+            ->from('events')
+            ->orderBy('type', 'ASC')
+            ->addOrderBy('sub_type', 'ASC');
+
+        $result = $qb->executeQuery();
+        $rows = $result->fetchAllAssociative();
+
+        $types = [];
+        foreach ($rows as $row) {
+            $type = $row['type'];
+            $subType = $row['sub_type'];
+
+            if (!isset($types[$type])) {
+                $types[$type] = [];
+            }
+            $types[$type][] = $subType;
+        }
+
+        return $types;
+    }
 }
