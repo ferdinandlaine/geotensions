@@ -1,18 +1,8 @@
 # README.md
 
-## Project Overview
+**Geotensions** is a data visualization application for ACLED (Armed Conflict Location & Event Data).
 
-**Geotensions** is a data visualization application analyzing ACLED (Armed Conflict Location & Event Data) events.
-
-The application combines an interactive map, timeline with brush filtering, and dynamic faceted filters to explore political violence and protest events.
-
-## Stack
-
-- **Frontend**: React 19 + TypeScript + Vite 7 + Tailwind CSS 4 + MapLibre GL 5 + react-map-gl 8
-- **Backend**: Symfony 7.4 (PHP 8.2+) + Doctrine DBAL (no ORM)
-- **Database**: PostgreSQL 18 + PostGIS 3.6
-- **Ingestion**: Python 3.12 + pandas + psycopg3 (automated with cron)
-- **Container**: Docker Compose for all services
+The application features an interactive map, timeline with brush filtering, and dynamic faceted filters.
 
 ## Development Commands
 
@@ -35,22 +25,6 @@ pnpm lint
 pnpm preview
 ```
 
-### API
-
-```bash
-# Install dependencies
-docker compose exec php-fpm composer install
-
-# Symfony console
-docker compose exec php-fpm php bin/console
-
-# Create/run database migrations
-docker compose exec php-fpm php bin/console doctrine:migrations:migrate
-
-# Clear Symfony cache
-docker compose exec php-fpm php bin/console cache:clear
-```
-
 ### Docker Compose
 
 ```bash
@@ -67,13 +41,34 @@ docker compose down -v
 docker compose logs -f
 ```
 
+#### Manual install API
+
+```bash
+# Install dependencies
+docker compose exec php-fpm composer install
+
+# Symfony console
+docker compose exec php-fpm php bin/console
+
+# Create/run database migrations
+docker compose exec php-fpm php bin/console doctrine:migrations:migrate
+
+# Clear Symfony cache
+docker compose exec php-fpm php bin/console cache:clear
+```
+
 ## Services
 
-- Web client: http://localhost:80 (port configurable via `CLIENT_PORT`)
-- Symfony API: http://localhost:8000 (port configurable via `API_PORT`)
-- PostgreSQL: http://localhost:5432 (port configurable via `POSTGRES_PORT`)
+- **Web client**: http://localhost:80 (configurable with `CLIENT_PORT`)
+- **Symfony API**: http://localhost:8000 (configurable with `API_PORT`)
+- **PostgreSQL**: http://localhost:5432 (configurable with `POSTGRES_PORT`)
 
-## Data Ingestion
+## Data
+
+- **Source**: [ACLED (Armed Conflict Location & Event Data)](https://acleddata.com).
+- **Codebook**: https://acleddata.com/methodology/acled-codebook
+
+### Data Ingestion
 
 Place ACLED CSV files in `data/incoming/` directory. The ingestion service automatically processes them:
 
@@ -82,25 +77,11 @@ Place ACLED CSV files in `data/incoming/` directory. The ingestion service autom
 3. Duplicate events are handled via `acled_id` unique constraint (updates only if timestamp is newer)
 4. Processed files are archived to `data/archived/` with timestamp
 
-Manual ingestion:
-
-```bash
-docker compose exec ingest python /app/ingest_acled.py
-```
-
-## ACLED Dataset
-
-- **Source**: https://acleddata.com/
-- **Documentation**: https://acleddata.com/methodology/acled-codebook
-
-### Event Types
-
-1. **Protests**: Peaceful protest, protest with intervention, excessive force
-2. **Riots**: Violent demonstrations, urban violence
-3. **Violence against civilians**: Targeted attacks
-4. **Strategic developments**: Troop movements, strategic changes
-
 ### Critical Interpretation Notes
 
 - **`event_type`/`sub_event_type`**: Follow ACLED methodology (not arbitrary)
 - **Event IDs**: The API uses ACLED's official identifiers (`acled_id` like "FRA37186"), not database internal IDs, ensuring stable URLs across environments
+
+## License
+
+This project is licensed under the [Apache License 2.0](LICENSE).
