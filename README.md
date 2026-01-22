@@ -4,56 +4,55 @@
 
 The application features an interactive map, timeline with brush filtering, and dynamic faceted filters.
 
-## Development Commands
+## Quick Start
+
+```bash
+# Start development environment (installs deps, starts services, runs client)
+make dev
+
+# Stop all services
+make down
+```
+
+## Make Commands
+
+| Command       | Description                                                     |
+| ------------- | --------------------------------------------------------------- |
+| `make dev`    | Install client deps, start Docker services, run Vite dev server |
+| `make down`   | Stop all Docker services                                        |
+| `make logs`   | Follow Docker logs                                              |
+| `make db`     | Open PostgreSQL shell                                           |
+| `make api`    | Rebuild and restart API services                                |
+| `make client` | Run client dev server                                           |
+| `make clean`  | Full cleanup: stop services, remove volumes and node_modules    |
+
+## Manual Commands
 
 ### Client
 
 ```bash
-# Install dependencies
-cd client && pnpm install
-
-# Development server
-pnpm dev
-
-# Production build
-pnpm build
-
-# Lint
-pnpm lint
-
-# Preview production build locally
-pnpm preview
+cd client && pnpm install   # Install dependencies
+pnpm dev                    # Development server
+pnpm build                  # Production build
+pnpm lint                   # Lint
+pnpm preview                # Preview production build
 ```
 
 ### Docker Compose
 
 ```bash
-# Start all services
-docker compose up -d
-
-# Stop services
-docker compose down
-
-# Stop services + remove volumes
-docker compose down -v
-
-# View logs
-docker compose logs -f
+docker compose up -d        # Start all services
+docker compose down         # Stop services
+docker compose down -v      # Stop + remove volumes
+docker compose logs -f      # View logs
 ```
 
-#### Manual install API
+### API
 
 ```bash
-# Install dependencies
 docker compose exec php-fpm composer install
-
-# Symfony console
 docker compose exec php-fpm php bin/console
-
-# Create/run database migrations
 docker compose exec php-fpm php bin/console doctrine:migrations:migrate
-
-# Clear Symfony cache
 docker compose exec php-fpm php bin/console cache:clear
 ```
 
