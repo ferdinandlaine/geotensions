@@ -1,6 +1,7 @@
 **/.env*
 !**/.env.template
 **/.DS_Store
+.vscode/
 **/*.md
 !README.md
 data/
