@@ -1,8 +1,12 @@
 import { IconMinus, IconPlus } from '@tabler/icons-react'
+import type { RefObject } from 'react'
 import type { MapRef } from 'react-map-gl/maplibre'
 
+import { Button } from '../ui/button'
+import { ButtonGroup } from '../ui/button-group'
+
 interface MapControlsProps {
-  mapRef: React.RefObject<MapRef | null>
+  mapRef: RefObject<MapRef | null>
   canZoomIn: boolean
   canZoomOut: boolean
 }
@@ -17,25 +21,27 @@ function MapControls({ mapRef, canZoomIn, canZoomOut }: MapControlsProps) {
   }
 
   return (
-    <div className="flex flex-col gap-1">
-      <button
-        className="cursor-pointer p-1 text-neutral-100 disabled:cursor-not-allowed disabled:text-neutral-500"
+    <ButtonGroup orientation="vertical" aria-label="Map controls" className="h-fit">
+      <Button
+        variant="outline"
+        size="icon-sm"
         aria-label="Zoom in"
         disabled={!canZoomIn}
         onClick={zoomIn}
       >
-        <IconPlus size={16} />
-      </button>
+        <IconPlus />
+      </Button>
 
-      <button
-        className="cursor-pointer p-1 text-neutral-100 disabled:cursor-not-allowed disabled:text-neutral-500"
+      <Button
+        variant="outline"
+        size="icon-sm"
         aria-label="Zoom out"
         disabled={!canZoomOut}
         onClick={zoomOut}
       >
-        <IconMinus size={16} />
-      </button>
-    </div>
+        <IconMinus />
+      </Button>
+    </ButtonGroup>
   )
 }
 

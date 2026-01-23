@@ -256,7 +256,7 @@ function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoo
   return (
     <div
       ref={containerRef}
-      className="card w-48 cursor-grab overflow-hidden active:cursor-grabbing"
+      className="bg-background text-foreground w-48 cursor-grab overflow-hidden rounded-md border active:cursor-grabbing"
       style={{ aspectRatio, touchAction: 'none' }}
     >
       <Map

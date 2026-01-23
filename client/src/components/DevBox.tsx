@@ -2,7 +2,7 @@ import type { PropsWithChildren } from 'react'
 
 function DevBox({ children }: PropsWithChildren) {
   return (
-    <pre className="card bg-neutral-900/75 px-2 py-1.5 text-xs text-neutral-100">
+    <pre className="bg-background text-foreground rounded-md border px-2 py-1.5 text-xs">
       {children}
     </pre>
   )
