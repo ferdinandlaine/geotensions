@@ -1,20 +1,31 @@
+import { LngLatBounds, type LngLatBoundsLike, type StyleSpecification } from 'maplibre-gl'
 import { type PropsWithChildren, useCallback, useRef, useState } from 'react'
-import {
-  type LngLatBounds,
-  Map,
-  type MapEvent,
-  type MapRef,
-  type StyleSpecification,
-  type ViewStateChangeEvent,
-} from 'react-map-gl/maplibre'
+import { Map, type MapEvent, type MapRef, type ViewStateChangeEvent } from 'react-map-gl/maplibre'
 
 import darkMatter from '@/assets/map-styles/dark-matter.json'
 import DevBox from '@/components/DevBox'
 import { MAP_CONFIG } from '@/config/map'
-import { isAtMaxBoundsLimit } from '@/utils/geo'
 
 import MapControls from './MapControls'
 import Minimap from './Minimap'
+
+/** Check if the viewport touches the bounds on both sides of at least one axis. */
+function isViewportAtBoundsEdge(
+  viewportBounds: LngLatBounds | null,
+  maxBounds: LngLatBoundsLike
+): boolean {
+  if (!viewportBounds) return false
+
+  const bounds = LngLatBounds.convert(maxBounds)
+  const tolerance = 0.1
+
+  const touchesWest = viewportBounds.getWest() <= bounds.getWest() + tolerance
+  const touchesEast = viewportBounds.getEast() >= bounds.getEast() - tolerance
+  const touchesSouth = viewportBounds.getSouth() <= bounds.getSouth() + tolerance
+  const touchesNorth = viewportBounds.getNorth() >= bounds.getNorth() - tolerance
+
+  return (touchesWest && touchesEast) || (touchesSouth && touchesNorth)
+}
 
 interface MapViewProps {
   onBoundsChange: (bounds: LngLatBounds) => void
@@ -66,9 +77,9 @@ function MapView({ children, onBoundsChange }: PropsWithChildren<MapViewProps>) 
     map.setZoom(map.getZoom() + delta * 0.05)
   }, [])
 
-  const atMaxBoundsLimit = isAtMaxBoundsLimit(bounds, MAP_CONFIG.MAX_BOUNDS)
   const canZoomIn = zoom < MAP_CONFIG.MAX_ZOOM
-  const canZoomOut = zoom > MAP_CONFIG.MIN_ZOOM && !atMaxBoundsLimit
+  const canZoomOut =
+    zoom > MAP_CONFIG.MIN_ZOOM && !isViewportAtBoundsEdge(bounds, MAP_CONFIG.MAX_BOUNDS)
 
   return (
     <>
@@ -107,8 +118,6 @@ function MapView({ children, onBoundsChange }: PropsWithChildren<MapViewProps>) 
           {import.meta.env.DEV && (
             <DevBox>
               Zoom: {zoom.toFixed(2)}
-              <br />
-              atMaxBoundsLimit: {String(atMaxBoundsLimit)}
               <br />
               canZoomOut: {String(canZoomOut)}
               <br />
