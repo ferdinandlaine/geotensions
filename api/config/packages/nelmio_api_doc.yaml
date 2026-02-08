@@ -1,8 +1,9 @@
 nelmio_api_doc:
     documentation:
         info:
-            title: Geotensions API
-            description: API REST exploitant ACLED pour visualisation cartographique.
+            title: GeoTensions API
+            description: REST API serving filtered ACLED data as GeoJSON.
+
             version: 0.2.0
     areas:
         path_patterns:

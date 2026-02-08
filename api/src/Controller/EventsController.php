@@ -18,8 +18,8 @@ class EventsController extends AbstractController
     #[Route('/events', name: 'events', methods: ['GET'])]
     #[OA\Get(
         path: '/api/events',
-        summary: 'Lister les événements',
-        description: 'Retourne les événements au format GeoJSON'
+        summary: 'List events',
+        description: 'Returns events as GeoJSON'
     )]
     #[OA\Parameter(
         name: 'bbox',
@@ -30,21 +30,21 @@ class EventsController extends AbstractController
     )]
     #[OA\Parameter(
         name: 'date_from',
-        description: 'Date de début (AAAA-MM-JJ)',
+        description: 'Start date (YYYY-MM-DD)',
         in: 'query',
         required: true,
         schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-26')
     )]
     #[OA\Parameter(
         name: 'date_to',
-        description: 'Date de fin (AAAA-MM-JJ)',
+        description: 'End date (YYYY-MM-DD)',
         in: 'query',
         required: true,
         schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-27')
     )]
     #[OA\Parameter(
         name: 'type[]',
-        description: 'Type d\'événement',
+        description: 'Event type',
         in: 'query',
         required: false,
         schema: new OA\Schema(
@@ -55,14 +55,14 @@ class EventsController extends AbstractController
     )]
     #[OA\Parameter(
         name: 'limit',
-        description: 'Nombre maximum d\'événements',
+        description: 'Maximum number of events',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer', default: 2500, minimum: 1, maximum: 5000, example: 2500)
     )]
     #[OA\Response(
         response: 200,
-        description: 'GeoJSON FeatureCollection avec métadonnées',
+        description: 'GeoJSON FeatureCollection with metadata',
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'type', type: 'string', example: 'FeatureCollection'),
@@ -265,12 +265,12 @@ class EventsController extends AbstractController
     #[Route('/types', name: 'types', methods: ['GET'])]
     #[OA\Get(
         path: '/api/types',
-        summary: 'Lister les types d\'événements',
-        description: 'Retourne tous les types d\'événements distincts avec leurs sous-types'
+        summary: 'List event types',
+        description: 'Returns all distinct event types with their subtypes'
     )]
     #[OA\Response(
         response: 200,
-        description: 'Types d\'événements avec leurs sous-types',
+        description: 'Event types with their subtypes',
         content: new OA\JsonContent(
             type: 'object',
             additionalProperties: new OA\AdditionalProperties(
