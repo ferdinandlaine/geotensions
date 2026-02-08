@@ -1,68 +1,81 @@
+import { endOfMonth } from 'date-fns'
 import { useMemo, useState } from 'react'
 import type { LngLatBounds } from 'react-map-gl/maplibre'
 
-import DevBox from '@/components/DevBox'
-import { MapView } from '@/features/Map'
-import { useEvents } from '@/hooks/useEvents'
-import type { BBox, EventsQuery } from '@/types/event'
+import AppSidebar from './components/AppSidebar'
+import { SidebarProvider, SidebarSeparator, SidebarTrigger } from './components/ui/sidebar'
+import { DateRangeFilter, EventTypeFilter } from './features/Filters'
+import { MapView } from './features/Map'
+import { useEvents } from './hooks/useEvents'
+import type { BBox, EventsQuery } from './types/event'
+import { type DateRange, isValidDateRange } from './types/filter'
 
 function App() {
-  const initialRange = {
-    from: new Date('2024-01-26'),
-    to: new Date('2024-01-27'),
-  }
-
-  const [dateFrom] = useState(initialRange.from)
-  const [dateTo] = useState(initialRange.to)
   const [bounds, setBounds] = useState<LngLatBounds | null>(null)
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: new Date('2025-01-01'),
+    to: endOfMonth(new Date('2025-01-01')),
+  })
+  const [eventTypes, setEventTypes] = useState<string[]>([])
 
   const query = useMemo<EventsQuery | undefined>(() => {
     if (!bounds) return
 
-    // Normalize LngLatBounds to plain tuple for stable query key
-    // Round to 2 decimals (~1km precision) to avoid cache misses from tiny movements
-    const bbox: BBox = [
-      Math.round(bounds.getWest() * 100) / 100,
-      Math.round(bounds.getSouth() * 100) / 100,
-      Math.round(bounds.getEast() * 100) / 100,
-      Math.round(bounds.getNorth() * 100) / 100,
-    ]
-
     return {
-      bbox,
-      filter: {
-        dateFrom,
-        dateTo,
-        types: [],
+      bbox: normalizeBbox(bounds),
+      filters: {
+        dateRange,
+        eventTypes,
       },
     }
-  }, [bounds, dateFrom, dateTo])
+  }, [bounds, dateRange, eventTypes])
 
   const { data: events } = useEvents(query)
 
   return (
-    <div className="relative h-screen w-full">
-      <MapView onBoundsChange={setBounds}>
-        {/* TODO: Add EventsLayer */}
-        {/* <EventsLayer events={events} /> */}
-      </MapView>
+    <>
+      <SidebarProvider>
+        <AppSidebar variant="floating" className="pr-0">
+          <DateRangeFilter
+            value={dateRange}
+            onChange={(range) => isValidDateRange(range) && setDateRange(range)}
+          />
+          <SidebarSeparator className="mx-0" />
+          <EventTypeFilter value={eventTypes} onChange={setEventTypes} />
+        </AppSidebar>
 
-      {import.meta.env.DEV && (
-        <div className="absolute top-4 left-4 z-50">
-          <DevBox>
-            Date range: {dateFrom.toLocaleDateString('fr-FR')} →{' '}
-            {dateTo.toLocaleDateString('fr-FR')}
-            <br />
-            Event count: {events?.features.length ?? 0}
-            <br />
-            Is truncated: {String(events?.is_truncated ?? false)}
-            <br />
-            Total events: {events?.total_count ?? 0}
-          </DevBox>
-        </div>
-      )}
-    </div>
+        <SidebarTrigger className="relative top-4 left-4 order-1" />
+
+        <main className="fixed inset-0">
+          <MapView onBoundsChange={setBounds}>
+            {/* TODO: Add EventsLayer */}
+            {/* <EventsLayer events={events} /> */}
+          </MapView>
+
+          <div className="absolute bottom-8 left-0 flex w-full justify-center">
+            <div className="bg-background/75 pointer-events-auto w-full max-w-2xl rounded-lg border p-4 text-center">
+              <pre>TimeBrush placeholder</pre>
+            </div>
+          </div>
+        </main>
+      </SidebarProvider>
+    </>
   )
+}
+
+/**
+ * Convert LngLatBounds to BBox tuple and round for stable query key.
+ * @param precision Number of decimal places (2 ≈ 1km at equator)
+ */
+function normalizeBbox(bounds: LngLatBounds, precision = 2): BBox {
+  const factor = Math.pow(10, precision)
+
+  return [
+    Math.round(bounds.getWest() * factor) / factor,
+    Math.round(bounds.getSouth() * factor) / factor,
+    Math.round(bounds.getEast() * factor) / factor,
+    Math.round(bounds.getNorth() * factor) / factor,
+  ]
 }
 
 export default App

@@ -1,26 +1,33 @@
-import type { EventCollection, EventFilter, EventsQuery } from '@/types/event'
+import { format } from 'date-fns'
+
+import type { EventCollection, EventsQuery, EventTypeMap } from '@/types/event'
+import type { EventFilters } from '@/types/filter'
 
 import { fetchApi } from './client'
 
 export function fetchEvents(query: EventsQuery, signal?: AbortSignal) {
-  const { bbox, filter } = query
+  const { bbox, filters } = query
 
   return fetchApi<EventCollection>(
-    `/events?bbox=${bbox.join(',')}&${filterToParams(filter)}`,
+    `/events?bbox=${bbox.join(',')}&${filtersToAPIParams(filters)}`,
     signal
   )
 }
 
-function filterToParams(filter: EventFilter): URLSearchParams {
-  const { dateFrom, dateTo, types } = filter
+export function fetchEventTypes() {
+  return fetchApi<EventTypeMap>(`/types`)
+}
+
+function filtersToAPIParams(filters: EventFilters): URLSearchParams {
+  const { dateRange, eventTypes } = filters
 
   const params = new URLSearchParams({
-    date_from: dateFrom.toISOString().split('T')[0],
-    date_to: dateTo.toISOString().split('T')[0],
+    date_from: format(dateRange.from, 'yyyy-MM-dd'),
+    date_to: format(dateRange.to, 'yyyy-MM-dd'),
   })
 
   // Generate array parameters: ?type[]=Protests&type[]=Riots
-  types?.forEach((type: string) => params.append('type[]', type))
+  eventTypes.forEach((type: string) => params.append('type[]', type))
 
   return params
 }

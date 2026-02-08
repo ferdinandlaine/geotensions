@@ -1,3 +1,5 @@
+import type { EventFilters } from './filter'
+
 export interface Event {
   type: 'Feature'
   id: string
@@ -19,6 +21,8 @@ export interface EventCollection {
   total_count: number
 }
 
+export type EventTypeMap = Record<string, string[]>
+
 /**
  * Bounding box coordinates in [west, south, east, north] format.
  * Corresponds to API format: bbox=minLon,minLat,maxLon,maxLat
@@ -27,11 +31,5 @@ export type BBox = [west: number, south: number, east: number, north: number]
 
 export interface EventsQuery {
   bbox: BBox
-  filter: EventFilter
-}
-
-export interface EventFilter {
-  dateFrom: Date
-  dateTo: Date
-  types: string[]
+  filters: EventFilters
 }
