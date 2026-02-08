@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { LngLatBounds } from 'react-map-gl/maplibre'
 
 import DevBox from '@/components/DevBox'
-import MapView from '@/components/Map/MapView'
+import { MapView } from '@/features/Map'
 import { useEvents } from '@/hooks/useEvents'
 import type { BBox, EventsQuery } from '@/types/event'
 

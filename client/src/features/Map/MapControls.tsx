@@ -2,8 +2,8 @@ import { IconMinus, IconPlus } from '@tabler/icons-react'
 import type { RefObject } from 'react'
 import type { MapRef } from 'react-map-gl/maplibre'
 
-import { Button } from '../ui/button'
-import { ButtonGroup } from '../ui/button-group'
+import { Button } from '@/components/ui/button'
+import { ButtonGroup } from '@/components/ui/button-group'
 
 interface MapControlsProps {
   mapRef: RefObject<MapRef | null>

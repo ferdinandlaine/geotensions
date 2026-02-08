@@ -130,4 +130,4 @@ function MapView({ children, onBoundsChange }: PropsWithChildren<MapViewProps>) 
   )
 }
 
-export default MapView
+export { MapView }
