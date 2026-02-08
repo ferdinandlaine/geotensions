@@ -2,7 +2,7 @@ import { type D3DragEvent, drag } from 'd3-drag'
 import { select } from 'd3-selection'
 import { type RefObject, useEffect, useRef } from 'react'
 
-type DragHandlers<T extends Element> = {
+type DragHandlers<T extends HTMLElement> = {
   onStart?: (event: D3DragEvent<T, unknown, unknown>) => void
   onDrag: (event: D3DragEvent<T, unknown, unknown>) => void
   onEnd?: (event: D3DragEvent<T, unknown, unknown>) => void
@@ -14,7 +14,7 @@ type DragOptions = {
 }
 
 /** Reusable drag event handler hook using D3 */
-export function useDrag<T extends Element>(
+export function useDrag<T extends HTMLElement>(
   target: RefObject<T | null> | T | null,
   handlers: DragHandlers<T>,
   options: DragOptions = {}
@@ -31,6 +31,7 @@ export function useDrag<T extends Element>(
     let startY = 0
 
     const dragBehavior = drag<T, unknown>()
+      .container(element)
       .on('start', (event) => {
         hasDragged = false
         startX = event.x
