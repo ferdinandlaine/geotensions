@@ -8,6 +8,7 @@ ACLED data ingestion script
 4. Archive processed files
 """
 
+import csv
 import os
 import sys
 import time
@@ -271,7 +272,15 @@ def process_csv_file(filepath):
     """
     logger.info(f"Processing file: {filepath}")
 
-    df = pandas.read_csv(filepath)
+    # Detect CSV delimiter (handles ACLED "compatibility mode" which uses semicolons)
+    with open(filepath, 'r', newline='') as f:
+        sample = f.read(8192)
+        dialect = csv.Sniffer().sniff(sample, delimiters=',;')
+
+    if dialect.delimiter != ',':
+        logger.warning(f"Detected non-standard delimiter '{dialect.delimiter}' — expected comma-delimited CSV")
+
+    df = pandas.read_csv(filepath, sep=dialect.delimiter)
     df_normalized = normalize_dataframe(df)
     conn = get_db_connection()
 
