@@ -21,7 +21,7 @@ function MapControls({ mapRef, canZoomIn, canZoomOut }: MapControlsProps) {
   }
 
   return (
-    <ButtonGroup orientation="vertical" aria-label="Map controls" className="h-fit">
+    <ButtonGroup orientation="vertical" aria-label="Map controls">
       <Button
         variant="outline"
         size="icon-sm"

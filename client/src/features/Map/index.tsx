@@ -3,7 +3,6 @@ import { type PropsWithChildren, useCallback, useRef, useState } from 'react'
 import { Map, type MapEvent, type MapRef, type ViewStateChangeEvent } from 'react-map-gl/maplibre'
 
 import darkMatter from '@/assets/map-styles/dark-matter.json'
-import DevBox from '@/components/DevBox'
 import { MAP_CONFIG } from '@/config/map'
 
 import MapControls from './MapControls'
@@ -105,26 +104,15 @@ function MapView({ children, onBoundsChange }: PropsWithChildren<MapViewProps>) 
 
       <div className="absolute top-4 right-4 flex gap-2">
         <MapControls mapRef={mapRef} canZoomIn={canZoomIn} canZoomOut={canZoomOut} />
-        <div className="flex flex-col gap-2">
-          <Minimap
-            viewportBounds={bounds}
-            canZoomIn={canZoomIn}
-            canZoomOut={canZoomOut}
-            onClick={handleMinimapClick}
-            onDrag={handleMinimapDrag}
-            onZoom={handleMinimapZoom}
-          />
 
-          {import.meta.env.DEV && (
-            <DevBox>
-              Zoom: {zoom.toFixed(2)}
-              <br />
-              canZoomOut: {String(canZoomOut)}
-              <br />
-              canZoomIn: {String(canZoomIn)}
-            </DevBox>
-          )}
-        </div>
+        <Minimap
+          viewportBounds={bounds}
+          canZoomIn={canZoomIn}
+          canZoomOut={canZoomOut}
+          onClick={handleMinimapClick}
+          onDrag={handleMinimapDrag}
+          onZoom={handleMinimapZoom}
+        />
       </div>
     </>
   )

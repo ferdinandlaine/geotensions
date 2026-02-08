@@ -23,6 +23,7 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <ReactQueryDevtools />
+
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<App />} />

@@ -47,7 +47,7 @@ function calculateMercatorAspectRatio(boundsLike: LngLatBoundsLike): number {
   return deltaX / deltaY
 }
 
-interface Props {
+interface MinimapProps {
   viewportBounds: LngLatBounds | null
   canZoomIn: boolean
   canZoomOut: boolean
@@ -59,7 +59,7 @@ interface Props {
 const aspectRatio = calculateMercatorAspectRatio(MAP_CONFIG.MAX_BOUNDS)
 const RECTANGLE_MIN_SIZE = 4 // threshold below which rectangle is too small
 
-function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoom }: Props) {
+function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoom }: MinimapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const minimapRef = useRef<MapRef>(null)
 
