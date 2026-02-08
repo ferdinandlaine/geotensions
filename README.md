@@ -9,22 +9,15 @@ The application features an interactive map, timeline with brush filtering, and 
 ```bash
 # Start development environment (installs deps, starts services, runs client)
 make dev
-
-# Stop all services
-make down
 ```
 
 ## Make Commands
 
-| Command       | Description                                                     |
-| ------------- | --------------------------------------------------------------- |
-| `make dev`    | Install client deps, start Docker services, run Vite dev server |
-| `make down`   | Stop all Docker services                                        |
-| `make logs`   | Follow Docker logs                                              |
-| `make db`     | Open PostgreSQL shell                                           |
-| `make api`    | Rebuild and restart API services                                |
-| `make client` | Run client dev server                                           |
-| `make clean`  | Full cleanup: stop services, remove volumes and node_modules    |
+| Command      | Description                                                     |
+| ------------ | --------------------------------------------------------------- |
+| `make dev`   | Install client deps, start Docker services, run Vite dev server |
+| `make api`   | Rebuild and restart API services                                |
+| `make clean` | Full cleanup: stop services, remove volumes and node_modules    |
 
 ## Manual Commands
 

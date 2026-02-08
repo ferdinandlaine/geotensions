@@ -1,5 +1,5 @@
 **/.env*
-!**/.env.template
+!**/.env.example
 **/.DS_Store
 .vscode/
 **/*.md
