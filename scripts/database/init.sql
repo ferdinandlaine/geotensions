@@ -18,7 +18,7 @@ CREATE TABLE events (
     interaction TEXT NOT NULL,
     
     -- Geographic
-    iso SMALLINT NOT NULL CHECK (iso BETWEEN 1 AND 999),
+    iso SMALLINT NOT NULL CHECK (iso BETWEEN 0 AND 999),
     region VARCHAR(100) NOT NULL,
     country VARCHAR(100) NOT NULL,
     admin1 VARCHAR(255) NOT NULL,
