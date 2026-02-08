@@ -6,6 +6,25 @@ use Doctrine\DBAL\Connection;
 
 class EventRepository
 {
+    /**
+     * Canonical ACLED event type and sub-event type ordering.
+     *
+     * Source: ACLED Codebook, Table 2 — "ACLED Events"
+     * @see https://acleddata.com/methodology/acled-codebook#acled-events-2
+     *
+     * This order reflects the ACLED severity hierarchy: when multiple tactics
+     * occur simultaneously at the same location and time, the higher-ranked
+     * event type subsumes lower ones to avoid double-counting.
+     */
+    private const TYPE_ORDER = [
+        'Battles' => ['Government regains territory', 'Non-state actor overtakes territory', 'Armed clash'],
+        'Protests' => ['Excessive force against protesters', 'Protest with intervention', 'Peaceful protest'],
+        'Riots' => ['Violent demonstration', 'Mob violence'],
+        'Explosions/Remote violence' => ['Chemical weapon', 'Air/drone strike', 'Suicide bomb', 'Shelling/artillery/missile attack', 'Remote explosive/landmine/IED', 'Grenade'],
+        'Violence against civilians' => ['Sexual violence', 'Attack', 'Abduction/forced disappearance'],
+        'Strategic developments' => ['Agreement', 'Arrests', 'Change to group/activity', 'Disrupted weapons use', 'Headquarters or base established', 'Looting/property destruction', 'Non-violent transfer of territory', 'Other'],
+    ];
+
     public function __construct(
         private Connection $connection
     ) {}
@@ -101,22 +120,32 @@ class EventRepository
         $qb = $this->connection->createQueryBuilder();
 
         $qb->select('DISTINCT type', 'sub_type')
-            ->from('events')
-            ->orderBy('type', 'ASC')
-            ->addOrderBy('sub_type', 'ASC');
+            ->from('events');
 
         $result = $qb->executeQuery();
         $rows = $result->fetchAllAssociative();
 
         $types = [];
         foreach ($rows as $row) {
-            $type = $row['type'];
-            $subType = $row['sub_type'];
+            $types[$row['type']][] = $row['sub_type'];
+        }
 
-            if (!isset($types[$type])) {
-                $types[$type] = [];
-            }
-            $types[$type][] = $subType;
+        // Sort types and sub-types according to canonical ACLED hierarchy
+        $typeKeys = array_keys(self::TYPE_ORDER);
+        $subTypeIndex = array_map('array_flip', self::TYPE_ORDER);
+
+        uksort(
+            $types,
+            fn($a, $b) => (array_search($a, $typeKeys) ?? PHP_INT_MAX)
+                <=> (array_search($b, $typeKeys) ?? PHP_INT_MAX)
+        );
+
+        foreach ($types as $type => &$subTypes) {
+            $index = $subTypeIndex[$type] ?? [];
+            usort(
+                $subTypes,
+                fn($a, $b) => ($index[$a] ?? PHP_INT_MAX) <=> ($index[$b] ?? PHP_INT_MAX)
+            );
         }
 
         return $types;
