@@ -6,6 +6,7 @@ import AppSidebar from './components/AppSidebar'
 import { SidebarProvider, SidebarSeparator, SidebarTrigger } from './components/ui/sidebar'
 import { DateRangeFilter, EventTypeFilter } from './features/Filters'
 import { MapView } from './features/Map'
+import { useDebounced } from './hooks/useDebounced'
 import { useEvents } from './hooks/useEvents'
 import type { BBox, EventsQuery } from './types/event'
 import { type DateRange, isValidDateRange } from './types/filter'
@@ -18,17 +19,19 @@ function App() {
   })
   const [eventTypes, setEventTypes] = useState<string[]>([])
 
+  const debouncedBounds = useDebounced(bounds, 300)
+
   const query = useMemo<EventsQuery | undefined>(() => {
-    if (!bounds) return
+    if (!debouncedBounds) return
 
     return {
-      bbox: normalizeBbox(bounds),
+      bbox: normalizeBbox(debouncedBounds),
       filters: {
         dateRange,
         eventTypes,
       },
     }
-  }, [bounds, dateRange, eventTypes])
+  }, [debouncedBounds, dateRange, eventTypes])
 
   const { data: events } = useEvents(query)
 
