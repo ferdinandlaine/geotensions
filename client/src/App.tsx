@@ -1,9 +1,12 @@
+import { IconAlertCircle } from '@tabler/icons-react'
 import { endOfMonth } from 'date-fns'
 import { useMemo, useState } from 'react'
 import type { LngLatBounds } from 'react-map-gl/maplibre'
 
 import AppSidebar from './components/AppSidebar'
+import { Alert, AlertDescription } from './components/ui/alert'
 import { SidebarProvider, SidebarSeparator, SidebarTrigger } from './components/ui/sidebar'
+import { Spinner } from './components/ui/spinner'
 import { DateRangeFilter, EventTypeFilter } from './features/Filters'
 import { MapView } from './features/Map'
 import { useDebounced } from './hooks/useDebounced'
@@ -33,7 +36,7 @@ function App() {
     }
   }, [debouncedBounds, dateRange, eventTypes])
 
-  const { data: events } = useEvents(query)
+  const { data: events, isFetching, isError } = useEvents(query)
 
   return (
     <>
@@ -55,8 +58,22 @@ function App() {
             {/* <EventsLayer events={events} /> */}
           </MapView>
 
-          <div className="absolute bottom-8 left-0 flex w-full justify-center">
-            <div className="bg-background/75 pointer-events-auto w-full max-w-2xl rounded-lg border p-4 text-center">
+          <div className="absolute bottom-8 left-0 flex w-full flex-col items-center gap-2">
+            {isFetching && (
+              <div className="bg-background/75 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm backdrop-blur-xs">
+                <Spinner />
+                <span>Loading events…</span>
+              </div>
+            )}
+
+            {isError && (
+              <Alert variant="destructive" className="w-fit">
+                <IconAlertCircle />
+                <AlertDescription>Failed to load events</AlertDescription>
+              </Alert>
+            )}
+
+            <div className="bg-background/75 pointer-events-auto w-full max-w-2xl rounded-lg border p-4 text-center backdrop-blur-xs">
               <pre>TimeBrush placeholder</pre>
             </div>
           </div>
