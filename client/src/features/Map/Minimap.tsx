@@ -9,7 +9,6 @@ import { Map, type MapRef, type StyleSpecification } from 'react-map-gl/maplibre
 
 import minimap from '@/assets/map-styles/minimap.json'
 import { MAP_CONFIG } from '@/config/map'
-import { THEME } from '@/config/theme'
 import { useDrag } from '@/hooks/useDrag'
 import { useWheel } from '@/hooks/useWheel'
 
@@ -143,7 +142,7 @@ function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoo
         visibility: 'visible',
       },
       paint: {
-        'fill-color': THEME.minimapViewport.rectangle.fill,
+        'fill-color': 'rgba(255, 255, 255, 0.1)',
       },
     })
 
@@ -155,7 +154,7 @@ function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoo
         visibility: 'visible',
       },
       paint: {
-        'line-color': THEME.minimapViewport.rectangle.stroke,
+        'line-color': 'rgba(255, 255, 255, 0.25)',
         'line-width': 1,
       },
     })
@@ -180,7 +179,7 @@ function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoo
         visibility: 'none',
       },
       paint: {
-        'circle-color': THEME.minimapViewport.point.fill,
+        'circle-color': 'rgba(255, 255, 255, 0.35)',
         'circle-radius': 3,
       },
     })
