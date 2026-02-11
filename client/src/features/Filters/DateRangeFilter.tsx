@@ -6,9 +6,9 @@ import DevBox from '@/components/DevBox'
 import { Calendar } from '@/components/ui/calendar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from '@/components/ui/sidebar'
+import { TIME_CONFIG } from '@/config/time'
 
-const TODAY = new Date()
-const COVERAGE_START_DATE = new Date(2020, 0, 1)
+const { COVERAGE_START_DATE, COVERAGE_END_DATE } = TIME_CONFIG
 
 export interface DateRangeFilterProps {
   value: DateRange
@@ -51,7 +51,7 @@ function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
               captionLayout="dropdown"
               className="w-full p-0"
               defaultMonth={value.from}
-              disabled={(date: Date) => date < COVERAGE_START_DATE || date > TODAY}
+              disabled={(date: Date) => date < COVERAGE_START_DATE || date > COVERAGE_END_DATE}
             />
           </SidebarGroupContent>
         </CollapsibleContent>
