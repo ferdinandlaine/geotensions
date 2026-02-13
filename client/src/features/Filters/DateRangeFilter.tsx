@@ -49,6 +49,8 @@ function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
               selected={value}
               onSelect={onChange}
               captionLayout="dropdown"
+              startMonth={COVERAGE_START_DATE}
+              endMonth={COVERAGE_END_DATE}
               className="w-full p-0"
               defaultMonth={value.from}
               disabled={(date: Date) => date < COVERAGE_START_DATE || date > COVERAGE_END_DATE}
