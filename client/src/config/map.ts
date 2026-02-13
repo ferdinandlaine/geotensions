@@ -3,7 +3,7 @@ import type { LngLatBoundsLike } from 'maplibre-gl'
 export const MAP_CONFIG = {
   MAX_BOUNDS: [
     // World
-    [-179.99, -60],
+    [-179.99, -65],
     [180, 85],
 
     // France
