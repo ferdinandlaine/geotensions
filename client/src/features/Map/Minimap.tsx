@@ -1,50 +1,23 @@
-import {
-  type GeoJSONSource,
-  LngLatBounds,
-  type LngLatBoundsLike,
-  MercatorCoordinate,
-} from 'maplibre-gl'
-import { useCallback, useEffect, useRef } from 'react'
-import { Map, type MapRef, type StyleSpecification } from 'react-map-gl/maplibre'
+import { LngLatBounds, MercatorCoordinate } from 'maplibre-gl'
+import { useRef, useState } from 'react'
+import { Layer, Map, type MapRef, Source, type StyleSpecification } from 'react-map-gl/maplibre'
 
 import minimap from '@/assets/map-styles/minimap.json'
 import { MAP_CONFIG } from '@/config/map'
-import { useDrag } from '@/hooks/useDrag'
+import { type DragEvent, useDrag } from '@/hooks/useDrag'
 import { useWheel } from '@/hooks/useWheel'
 
-/**
- * Calculate aspect ratio for a bounding box in Mercator projection
- * Uses MapLibre's native MercatorCoordinate for accurate conversion
- * This accounts for the non-linear latitude scaling in Web Mercator
- *
- * @param boundsLike - Any valid LngLatBoundsLike format
- * @throws Error if boundsLike cannot be converted to LngLatBounds
- */
-function calculateMercatorAspectRatio(boundsLike: LngLatBoundsLike): number {
-  let bounds: LngLatBounds
+// Pre-computed Mercator bounds (used for aspect ratio and viewport pixel size)
+const maxBounds = LngLatBounds.convert(MAP_CONFIG.MAX_BOUNDS)
+const maxBoundsSWMerc = MercatorCoordinate.fromLngLat(maxBounds.getSouthWest())
+const maxBoundsNEMerc = MercatorCoordinate.fromLngLat(maxBounds.getNorthEast())
+const mercatorWidth = maxBoundsNEMerc.x - maxBoundsSWMerc.x
+const mercatorHeight = Math.abs(maxBoundsNEMerc.y - maxBoundsSWMerc.y)
 
-  try {
-    bounds = LngLatBounds.convert(boundsLike)
-  } catch (error) {
-    throw new Error(
-      `Invalid bounds: ${error instanceof Error ? error.message : 'unknown error'}. ` +
-        `Received: ${JSON.stringify(boundsLike)}`
-    )
-  }
-
-  const sw = bounds.getSouthWest()
-  const ne = bounds.getNorthEast()
-
-  // Convert geographic coordinates to Mercator coordinates (0-1 range)
-  const swMercator = MercatorCoordinate.fromLngLat(sw)
-  const neMercator = MercatorCoordinate.fromLngLat(ne)
-
-  // Calculate deltas (abs because y decreases northward in Mercator)
-  const deltaX = neMercator.x - swMercator.x
-  const deltaY = Math.abs(neMercator.y - swMercator.y)
-
-  return deltaX / deltaY
-}
+const aspectRatio = mercatorWidth / mercatorHeight
+const MINIMAP_WIDTH_PX = 192 // w-48 = 12rem
+const MINIMAP_HEIGHT_PX = MINIMAP_WIDTH_PX / aspectRatio
+const RECTANGLE_MIN_PX = 4 // threshold below which rectangle switches to point
 
 interface MinimapProps {
   viewportBounds: LngLatBounds | null
@@ -55,38 +28,36 @@ interface MinimapProps {
   onZoom: (zoomDelta: number) => void
 }
 
-const aspectRatio = calculateMercatorAspectRatio(MAP_CONFIG.MAX_BOUNDS)
-const RECTANGLE_MIN_SIZE = 4 // threshold below which rectangle is too small
-
 function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoom }: MinimapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const minimapRef = useRef<MapRef>(null)
+  const [mapReady, setMapReady] = useState(false)
 
-  // Convert D3 drag event coordinates to geographic coordinates
-  const eventToLngLat = useCallback((event: { x: number; y: number }) => {
+  const handleMapLoad = () => {
     const minimap = minimapRef.current?.getMap()
-    if (!minimap) return null
+    if (!minimap) return
 
-    return minimap.unproject([event.x, event.y])
-  }, [])
+    minimap.fitBounds(MAP_CONFIG.MAX_BOUNDS, {
+      animate: false,
+      padding: -1,
+    })
 
-  const handleDragStart = useCallback(
-    (event: { x: number; y: number }) => {
-      const lngLat = eventToLngLat(event)
-      if (!lngLat) return
-      onClick(lngLat.lng, lngLat.lat)
-    },
-    [eventToLngLat, onClick]
-  )
+    setMapReady(true)
+  }
 
-  const handleDrag = useCallback(
-    (event: { x: number; y: number }) => {
-      const lngLat = eventToLngLat(event)
-      if (!lngLat) return
-      onDrag(lngLat.lng, lngLat.lat)
-    },
-    [eventToLngLat, onDrag]
-  )
+  const handleDragStart = (event: DragEvent) => {
+    const lngLat = minimapRef.current?.getMap()?.unproject([event.x, event.y])
+    if (!lngLat) return
+
+    onClick(lngLat.lng, lngLat.lat)
+  }
+
+  const handleDrag = (event: DragEvent) => {
+    const lngLat = minimapRef.current?.getMap()?.unproject([event.x, event.y])
+    if (!lngLat) return
+
+    onDrag(lngLat.lng, lngLat.lat)
+  }
 
   useDrag(
     containerRef,
@@ -108,96 +79,17 @@ function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoo
     }
   )
 
-  const handleMapLoad = useCallback(() => {
-    const minimap = minimapRef.current?.getMap()
-    if (!minimap) return
+  // Derive GeoJSON data and visibility from bounds
+  let rectangleData: GeoJSON.Feature<GeoJSON.Polygon> | null = null
+  let pointData: GeoJSON.Feature<GeoJSON.Point> | null = null
+  let showAsRect = true
 
-    minimap.fitBounds(MAP_CONFIG.MAX_BOUNDS, { animate: false, padding: -1 })
-
-    minimap.addSource('viewport-bounds', {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'Polygon',
-          coordinates: [
-            [
-              [0, 0],
-              [0, 0],
-              [0, 0],
-              [0, 0],
-              [0, 0],
-            ],
-          ],
-        },
-      },
-    })
-
-    minimap.addLayer({
-      id: 'viewport-fill',
-      type: 'fill',
-      source: 'viewport-bounds',
-      layout: {
-        visibility: 'visible',
-      },
-      paint: {
-        'fill-color': 'rgba(255, 255, 255, 0.1)',
-      },
-    })
-
-    minimap.addLayer({
-      id: 'viewport-outline',
-      type: 'line',
-      source: 'viewport-bounds',
-      layout: {
-        visibility: 'visible',
-      },
-      paint: {
-        'line-color': 'rgba(255, 255, 255, 0.25)',
-        'line-width': 1,
-      },
-    })
-
-    minimap.addSource('viewport-point', {
-      type: 'geojson',
-      data: {
-        type: 'Feature',
-        properties: {},
-        geometry: {
-          type: 'Point',
-          coordinates: [0, 0],
-        },
-      },
-    })
-
-    minimap.addLayer({
-      id: 'viewport-point',
-      type: 'circle',
-      source: 'viewport-point',
-      layout: {
-        visibility: 'none',
-      },
-      paint: {
-        'circle-color': 'rgba(255, 255, 255, 0.35)',
-        'circle-radius': 3,
-      },
-    })
-  }, [])
-
-  useEffect(() => {
-    const minimap = minimapRef.current?.getMap()
-    if (!minimap || !viewportBounds) return
-
+  if (viewportBounds) {
     const sw = viewportBounds.getSouthWest()
     const ne = viewportBounds.getNorthEast()
     const center = viewportBounds.getCenter()
 
-    // Update rectangle source
-    const rectangleSource = minimap.getSource('viewport-bounds') as GeoJSONSource
-    if (!rectangleSource) return
-
-    rectangleSource.setData({
+    rectangleData = {
       type: 'Feature',
       properties: {},
       geometry: {
@@ -212,45 +104,24 @@ function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoo
           ],
         ],
       },
-    })
+    }
 
-    // Update point source
-    const pointSource = minimap.getSource('viewport-point') as GeoJSONSource
-    if (!pointSource) return
-
-    pointSource.setData({
+    pointData = {
       type: 'Feature',
       properties: {},
       geometry: {
         type: 'Point',
         coordinates: [center.lng, center.lat],
       },
-    })
+    }
 
-    // Calculate viewport dimensions
-    const swPx = minimap.project([sw.lng, sw.lat])
-    const nePx = minimap.project([ne.lng, ne.lat])
-    const widthPx = Math.abs(nePx.x - swPx.x)
-    const heightPx = Math.abs(nePx.y - swPx.y)
-    const minDimension = Math.min(widthPx, heightPx)
-
-    // Toggle between point and rectangle based on size
-    minimap.setLayoutProperty(
-      'viewport-fill',
-      'visibility',
-      minDimension >= RECTANGLE_MIN_SIZE ? 'visible' : 'none'
-    )
-    minimap.setLayoutProperty(
-      'viewport-outline',
-      'visibility',
-      minDimension >= RECTANGLE_MIN_SIZE ? 'visible' : 'none'
-    )
-    minimap.setLayoutProperty(
-      'viewport-point',
-      'visibility',
-      minDimension < RECTANGLE_MIN_SIZE ? 'visible' : 'none'
-    )
-  }, [viewportBounds])
+    // Compute viewport pixel size on minimap using Mercator projection
+    const swMerc = MercatorCoordinate.fromLngLat(sw)
+    const neMerc = MercatorCoordinate.fromLngLat(ne)
+    const widthPx = ((neMerc.x - swMerc.x) / mercatorWidth) * MINIMAP_WIDTH_PX
+    const heightPx = (Math.abs(neMerc.y - swMerc.y) / mercatorHeight) * MINIMAP_HEIGHT_PX
+    showAsRect = Math.min(widthPx, heightPx) >= RECTANGLE_MIN_PX
+  }
 
   return (
     <div
@@ -265,7 +136,40 @@ function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoo
         renderWorldCopies={false}
         attributionControl={false}
         onLoad={handleMapLoad}
-      />
+      >
+        {mapReady && (
+          <>
+            {rectangleData && (
+              <Source id="viewport-bounds" type="geojson" data={rectangleData}>
+                <Layer
+                  id="viewport-fill"
+                  type="fill"
+                  paint={{ 'fill-color': 'rgba(255, 255, 255, 0.1)' }}
+                  layout={{ visibility: showAsRect ? 'visible' : 'none' }}
+                />
+
+                <Layer
+                  id="viewport-outline"
+                  type="line"
+                  paint={{ 'line-color': 'rgba(255, 255, 255, 0.25)', 'line-width': 1 }}
+                  layout={{ visibility: showAsRect ? 'visible' : 'none' }}
+                />
+              </Source>
+            )}
+
+            {pointData && (
+              <Source id="viewport-point" type="geojson" data={pointData}>
+                <Layer
+                  id="viewport-point"
+                  type="circle"
+                  paint={{ 'circle-color': 'rgba(255, 255, 255, 0.35)', 'circle-radius': 3 }}
+                  layout={{ visibility: showAsRect ? 'none' : 'visible' }}
+                />
+              </Source>
+            )}
+          </>
+        )}
+      </Map>
     </div>
   )
 }

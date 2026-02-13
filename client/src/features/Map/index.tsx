@@ -1,5 +1,5 @@
 import { LngLatBounds, type LngLatBoundsLike, type StyleSpecification } from 'maplibre-gl'
-import { type PropsWithChildren, useCallback, useRef, useState } from 'react'
+import { type PropsWithChildren, useRef, useState } from 'react'
 import { Map, type MapEvent, type MapRef, type ViewStateChangeEvent } from 'react-map-gl/maplibre'
 
 import darkMatter from '@/assets/map-styles/dark-matter.json'
@@ -35,46 +35,40 @@ function MapView({ children, onBoundsChange }: PropsWithChildren<MapViewProps>) 
   const [bounds, setBounds] = useState<LngLatBounds | null>(null)
   const [zoom, setZoom] = useState(MAP_CONFIG.INITIAL_ZOOM)
 
-  const handleViewStateChange = useCallback(
-    (e: ViewStateChangeEvent | MapEvent) => {
-      const _bounds = e.target.getBounds()
-      const _zoom = e.target.getZoom()
+  const handleViewStateChange = (e: ViewStateChangeEvent | MapEvent) => {
+    const _bounds = e.target.getBounds()
+    const _zoom = e.target.getZoom()
 
-      onBoundsChange(_bounds)
-      setBounds(_bounds)
-      setZoom(_zoom)
-    },
-    [onBoundsChange]
-  )
+    onBoundsChange(_bounds)
+    setBounds(_bounds)
+    setZoom(_zoom)
+  }
 
-  const handleMapLoad = useCallback(
-    (e: MapEvent) => {
-      e.target.keyboard.disableRotation()
-      handleViewStateChange(e)
-    },
-    [handleViewStateChange]
-  )
+  const handleMapLoad = (e: MapEvent) => {
+    e.target.keyboard.disableRotation()
+    handleViewStateChange(e)
+  }
 
-  const handleMinimapClick = useCallback((lng: number, lat: number) => {
+  const handleMinimapClick = (lng: number, lat: number) => {
     const map = mapRef.current?.getMap()
     if (!map) return
 
     map.stop().easeTo({ center: [lng, lat] })
-  }, [])
+  }
 
-  const handleMinimapDrag = useCallback((lng: number, lat: number) => {
+  const handleMinimapDrag = (lng: number, lat: number) => {
     const map = mapRef.current?.getMap()
     if (!map) return
 
     map.stop().setCenter([lng, lat])
-  }, [])
+  }
 
-  const handleMinimapZoom = useCallback((delta: number) => {
+  const handleMinimapZoom = (delta: number) => {
     const map = mapRef.current?.getMap()
     if (!map) return
 
     map.setZoom(map.getZoom() + delta * 0.05)
-  }, [])
+  }
 
   const canZoomIn = zoom < MAP_CONFIG.MAX_ZOOM
   const canZoomOut =
