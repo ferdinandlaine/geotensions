@@ -1,5 +1,6 @@
 import { LngLatBounds, type LngLatBoundsLike, type StyleSpecification } from 'maplibre-gl'
-import { type PropsWithChildren, useRef, useState } from 'react'
+import { type PropsWithChildren, type RefObject, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Map, type MapEvent, type MapRef, type ViewStateChangeEvent } from 'react-map-gl/maplibre'
 
 import darkMatter from '@/assets/map-styles/dark-matter.json'
@@ -28,9 +29,10 @@ function isViewportAtBoundsEdge(
 
 interface MapViewProps {
   onBoundsChange: (bounds: LngLatBounds) => void
+  controlsPortal: RefObject<HTMLElement | null>
 }
 
-function MapView({ children, onBoundsChange }: PropsWithChildren<MapViewProps>) {
+function MapView({ children, onBoundsChange, controlsPortal }: PropsWithChildren<MapViewProps>) {
   const mapRef = useRef<MapRef>(null)
   const [bounds, setBounds] = useState<LngLatBounds | null>(null)
   const [zoom, setZoom] = useState(MAP_CONFIG.INITIAL_ZOOM)
@@ -96,18 +98,22 @@ function MapView({ children, onBoundsChange }: PropsWithChildren<MapViewProps>) 
         {children}
       </Map>
 
-      <div className="absolute top-4 right-4 flex gap-2">
-        <MapControls mapRef={mapRef} canZoomIn={canZoomIn} canZoomOut={canZoomOut} />
+      {controlsPortal.current &&
+        createPortal(
+          <>
+            <MapControls mapRef={mapRef} canZoomIn={canZoomIn} canZoomOut={canZoomOut} />
 
-        <Minimap
-          viewportBounds={bounds}
-          canZoomIn={canZoomIn}
-          canZoomOut={canZoomOut}
-          onClick={handleMinimapClick}
-          onDrag={handleMinimapDrag}
-          onZoom={handleMinimapZoom}
-        />
-      </div>
+            <Minimap
+              viewportBounds={bounds}
+              canZoomIn={canZoomIn}
+              canZoomOut={canZoomOut}
+              onClick={handleMinimapClick}
+              onDrag={handleMinimapDrag}
+              onZoom={handleMinimapZoom}
+            />
+          </>,
+          controlsPortal.current
+        )}
     </>
   )
 }

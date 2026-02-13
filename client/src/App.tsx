@@ -1,6 +1,6 @@
 import { IconAlertCircle } from '@tabler/icons-react'
 import { startOfDay, subYears } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { LngLatBounds } from 'react-map-gl/maplibre'
 
 import AppSidebar from './components/AppSidebar'
@@ -16,6 +16,7 @@ import type { BBox, EventsQuery } from './types/event'
 import { type DateRange, isValidDateRange } from './types/filter'
 
 function App() {
+  const mapControlsRef = useRef<HTMLDivElement>(null)
   const [bounds, setBounds] = useState<LngLatBounds | null>(null)
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfDay(subYears(new Date(), 2)),
@@ -53,7 +54,7 @@ function App() {
         <SidebarTrigger className="relative top-4 left-4 order-1" />
 
         <main className="fixed inset-0">
-          <MapView onBoundsChange={setBounds}>
+          <MapView onBoundsChange={setBounds} controlsPortal={mapControlsRef}>
             {/* TODO: Add EventsLayer */}
             {/* <EventsLayer events={events} /> */}
           </MapView>
@@ -76,7 +77,7 @@ function App() {
             <TimeBrush className="max-w-4xl pb-8" value={dateRange} onChange={setDateRange} />
           </div>
 
-          <div className="absolute top-4 right-4 flex gap-2" />
+          <div ref={mapControlsRef} className="absolute top-4 right-4 flex gap-2" />
         </main>
       </SidebarProvider>
     </>
