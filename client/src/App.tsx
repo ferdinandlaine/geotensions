@@ -1,5 +1,5 @@
 import { IconAlertCircle } from '@tabler/icons-react'
-import { endOfMonth } from 'date-fns'
+import { startOfDay, subYears } from 'date-fns'
 import { useMemo, useState } from 'react'
 import type { LngLatBounds } from 'react-map-gl/maplibre'
 
@@ -9,6 +9,7 @@ import { SidebarProvider, SidebarSeparator, SidebarTrigger } from './components/
 import { Spinner } from './components/ui/spinner'
 import { DateRangeFilter, EventTypeFilter } from './features/Filters'
 import { MapView } from './features/Map'
+import { TimeBrush } from './features/TimeBrush'
 import { useDebounced } from './hooks/useDebounced'
 import { useEvents } from './hooks/useEvents'
 import type { BBox, EventsQuery } from './types/event'
@@ -17,13 +18,12 @@ import { type DateRange, isValidDateRange } from './types/filter'
 function App() {
   const [bounds, setBounds] = useState<LngLatBounds | null>(null)
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date('2025-01-01'),
-    to: endOfMonth(new Date('2025-01-01')),
+    from: startOfDay(subYears(new Date(), 2)),
+    to: startOfDay(subYears(new Date(), 1)),
   })
   const [eventTypes, setEventTypes] = useState<string[]>([])
 
   const debouncedBounds = useDebounced(bounds, 300)
-
   const query = useMemo<EventsQuery | undefined>(() => {
     if (!debouncedBounds) return
 
@@ -58,7 +58,7 @@ function App() {
             {/* <EventsLayer events={events} /> */}
           </MapView>
 
-          <div className="absolute bottom-8 left-0 flex w-full flex-col items-center gap-2">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 px-8 *:pointer-events-auto">
             {isFetching && (
               <div className="bg-background/75 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm backdrop-blur-xs">
                 <Spinner />
@@ -73,10 +73,10 @@ function App() {
               </Alert>
             )}
 
-            <div className="bg-background/75 pointer-events-auto w-full max-w-2xl rounded-lg border p-4 text-center backdrop-blur-xs">
-              <pre>TimeBrush placeholder</pre>
-            </div>
+            <TimeBrush className="max-w-4xl pb-8" value={dateRange} onChange={setDateRange} />
           </div>
+
+          <div className="absolute top-4 right-4 flex gap-2" />
         </main>
       </SidebarProvider>
     </>
