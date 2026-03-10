@@ -4,7 +4,7 @@ dev: # Start development environment
 	@if [ ! -f .env ]; then cp .env.example .env; fi
 	@if [ ! -f api/.env ]; then cp api/.env.example api/.env; fi
 	@if [ ! -f client/.env ]; then cp client/.env.example client/.env; fi
-	docker compose up -d database nginx php-fpm ingest
+	docker compose up -d --build database nginx php-fpm ingest
 	cd client && pnpm install && pnpm dev
 
 api: # Rebuild and restart API services
