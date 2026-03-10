@@ -11,6 +11,18 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1050,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          time: ['react-day-picker', 'date-fns'],
+          maplibre: ['maplibre-gl'],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',
