@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Repository\EventRepository;
+use App\Security\RequireAuth;
+use Nelmio\ApiDocBundle\Attribute\Security;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -59,6 +61,10 @@ class EventsController extends AbstractController
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'integer', default: 2500, minimum: 1, maximum: 5000, example: 2500)
+    )]
+    #[OA\Response(
+        response: 401,
+        description: 'Unauthorized: missing or invalid authentication token'
     )]
     #[OA\Response(
         response: 200,
@@ -132,6 +138,8 @@ class EventsController extends AbstractController
             type: 'object'
         )
     )]
+    #[Security(name: 'bearerAuth')]
+    #[RequireAuth]
     public function getEvents(
         #[MapQueryParameter] string $bbox,
         #[MapQueryParameter] string $date_from,
@@ -141,6 +149,7 @@ class EventsController extends AbstractController
     ): JsonResponse {
         // Parse bbox (format: minLon,minLat,maxLon,maxLat)
         $bbox = explode(',', $bbox);
+
         if (count($bbox) !== 4) {
             return $this->json([
                 'error' => 'invalid_bbox',
@@ -194,6 +203,7 @@ class EventsController extends AbstractController
         $dates = ['date_from' => $date_from, 'date_to' => $date_to];
         foreach ($dates as $key => $value) {
             $dateObj = \DateTime::createFromFormat('Y-m-d', $value);
+
             if (!$dateObj || $dateObj->format('Y-m-d') !== $value) {
                 return $this->json([
                     'error' => 'invalid_date',
@@ -221,9 +231,7 @@ class EventsController extends AbstractController
 
         // Sanitize limit parameter (clamped: 1-5000)
         $limit = max(1, min(5000, $limit));
-
         $events = $this->eventRepository->find($filters, $limit);
-
         // Extract total count from window function
         $totalCount = !empty($events) ? (int) $events[0]['total_count'] : 0;
 
@@ -287,7 +295,6 @@ class EventsController extends AbstractController
     public function getTypes(): JsonResponse
     {
         $types = $this->eventRepository->findDistinctTypes();
-
         return $this->json($types);
     }
 }
