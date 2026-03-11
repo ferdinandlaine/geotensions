@@ -2,12 +2,14 @@ import { brushX, type D3BrushEvent } from 'd3-brush'
 import type { ScaleTime } from 'd3-scale'
 import { pointer, select } from 'd3-selection'
 import { timeDay } from 'd3-time'
-import { addDays, clamp, differenceInDays, max, subDays } from 'date-fns'
+import { addDays, clamp } from 'date-fns'
 import { useEffect, useLayoutEffect, useRef } from 'react'
 
 import { TIME_CONFIG } from '@/config/time'
 import { cn } from '@/lib/utils'
 import type { DateRange } from '@/types/filter'
+
+import { normalizeSelection } from './normalizeSelection'
 
 const { COVERAGE_START_DATE, COVERAGE_END_DATE } = TIME_CONFIG
 const COVERAGE_BOUNDS = { start: COVERAGE_START_DATE, end: COVERAGE_END_DATE }
@@ -71,6 +73,7 @@ function Brush({ xScale, selection, className, onSelectionChange }: MainBrushPro
         if (!event.selection) return
 
         const [x0, x1] = event.selection as [number, number]
+
         brushGroup.select('.handle-line--w').attr('x1', x0).attr('x2', x0)
         brushGroup.select('.handle-line--e').attr('x1', x1).attr('x2', x1)
       })
@@ -80,11 +83,10 @@ function Brush({ xScale, selection, className, onSelectionChange }: MainBrushPro
         // Click outside brush → new single-day selection
         if (!event.selection) {
           const [cx] = pointer(event.sourceEvent, brushGroup.node())
-          const from = timeDay.round(xScale.invert(cx))
+          const from = clamp(timeDay.round(xScale.invert(cx)), COVERAGE_BOUNDS)
 
           brushGroup.call(brush.move, [xScale(from), xScale(addDays(from, 1))])
           onSelectionChangeRef.current({ from, to: from })
-
           return
         }
 
@@ -119,7 +121,7 @@ function Brush({ xScale, selection, className, onSelectionChange }: MainBrushPro
     }
   }, [width, xScale])
 
-  // Sync brush position with selection
+  // Update brush position when selection or scale changes
   useLayoutEffect(() => {
     if (!brushGroupRef.current || !brushInstanceRef.current) return
 
@@ -128,54 +130,6 @@ function Brush({ xScale, selection, className, onSelectionChange }: MainBrushPro
       xScale(addDays(selection.to, 1)),
     ])
   }, [selection, xScale])
-
-  function handleKeyDown(event: React.KeyboardEvent) {
-    const { from, to } = selectionRef.current
-    const selectionDays = differenceInDays(to, from)
-
-    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-      event.preventDefault()
-      const direction = event.key === 'ArrowRight' ? 1 : -1
-      const step = event.shiftKey ? selectionDays : 1
-      shiftSelection(direction * step)
-    } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-      event.preventDefault()
-      const direction = event.key === 'ArrowUp' ? 1 : -1
-      const step = event.shiftKey ? 7 : 1
-      resizeSelection(direction * step)
-    }
-  }
-
-  function shiftSelection(days: number) {
-    const { from, to } = selectionRef.current
-    const shifted = {
-      from: addDays(from, days),
-      to: addDays(to, days),
-    }
-
-    // Clamp to coverage bounds, preserving selection width
-    if (shifted.from < COVERAGE_START_DATE) {
-      const diff = to.getTime() - from.getTime()
-      shifted.from = COVERAGE_START_DATE
-      shifted.to = new Date(COVERAGE_START_DATE.getTime() + diff)
-    }
-
-    if (shifted.to > COVERAGE_END_DATE) {
-      const diff = to.getTime() - from.getTime()
-      shifted.to = COVERAGE_END_DATE
-      shifted.from = new Date(COVERAGE_END_DATE.getTime() - diff)
-    }
-
-    onSelectionChangeRef.current(shifted)
-  }
-
-  function resizeSelection(days: number) {
-    const { from, to } = selectionRef.current
-    const newTo = clamp(addDays(to, days), COVERAGE_BOUNDS)
-
-    if (from > newTo) return
-    onSelectionChange({ from, to: newTo })
-  }
 
   const fadeWidth = 12 * HANDLE_WIDTH
   const maskWidth = width + 2 * fadeWidth
@@ -187,9 +141,7 @@ function Brush({ xScale, selection, className, onSelectionChange }: MainBrushPro
       width={width}
       height={BRUSH_HEIGHT}
       overflow="visible"
-      tabIndex={0}
       className={cn('brush focus-within:outline-none', className)}
-      onKeyDown={handleKeyDown}
     >
       <defs>
         <linearGradient id="brush-fade-gradient">
@@ -200,7 +152,6 @@ function Brush({ xScale, selection, className, onSelectionChange }: MainBrushPro
         </linearGradient>
 
         <mask id="brush-mask">
-          {/* Extra height for stroke */}
           <rect
             x={-fadeWidth}
             y={-1}
@@ -214,26 +165,6 @@ function Brush({ xScale, selection, className, onSelectionChange }: MainBrushPro
       <g ref={brushGroupRef} mask="url(#brush-mask)" />
     </svg>
   )
-}
-
-/**
- * Converts pixel positions to normalized date range.
- *
- * @param x0 - Left pixel position
- * @param x1 - Right pixel position
- * @param xScale - D3 time scale for pixel-to-date conversion
- * @returns Normalized date range with from/to on day boundaries
- */
-function normalizeSelection(x0: number, x1: number, xScale: ScaleTime<number, number>): DateRange {
-  const fromDate = clamp(xScale.invert(x0), COVERAGE_BOUNDS)
-  const toDate = clamp(xScale.invert(x1), COVERAGE_BOUNDS)
-  const from = timeDay.round(fromDate)
-  // Visual range is [from, to+1), so subtract 1 day before rounding to get inclusive end date
-  const toRounded = timeDay.round(subDays(toDate, 1))
-  // Ensure to >= from (minimum single-day selection)
-  const to = max([toRounded, from])
-
-  return { from, to }
 }
 
 export default Brush

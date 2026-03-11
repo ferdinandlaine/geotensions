@@ -36,11 +36,7 @@
         stroke: var(--color-neutral-800);
         transform: scaleX(2);
         transform-origin: center;
-      }
-
-      &:focus .overlay {
-        stroke: var(--color-neutral-700);
-        stroke-width: 1.5;
+        transition: stroke 150ms;
       }
 
       .selection {
@@ -71,6 +67,44 @@
         stroke-width: 2;
         stroke-linecap: round;
         pointer-events: none;
+      }
+    }
+
+    .overview {
+      --rx: 6;
+
+      .overview-track {
+        fill: var(--color-background);
+        fill-opacity: 0.25;
+        stroke: var(--color-neutral-800);
+        stroke-width: 0.5;
+        rx: var(--rx);
+      }
+
+      .overview-selection {
+        fill: oklch(from var(--timebrush-color) calc(l * 0.65) calc(c * 0.6) h);
+        rx: calc(var(--rx) - 0.5);
+      }
+
+      .overview-viewport {
+        fill: white;
+        fill-opacity: 0.05;
+        stroke: var(--color-neutral-800);
+        rx: var(--rx);
+        transition:
+          stroke 100ms 50ms,
+          fill-opacity 150ms;
+      }
+
+      &:hover .overview-viewport {
+        fill-opacity: 0.1;
+        stroke: var(--color-neutral-700);
+      }
+    }
+
+    &:focus-within {
+      .brush .overlay {
+        stroke: var(--color-neutral-700);
       }
     }
   }
