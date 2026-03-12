@@ -6,7 +6,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
-import App from './App'
+import RequireAuth from './components/RequireAuth'
+import { AuthProvider } from './contexts/AuthContext'
+import App from './pages/App'
+import LoginPage from './pages/LoginPage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -25,9 +28,26 @@ createRoot(root).render(
       <ReactQueryDevtools />
 
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<App />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                <RequireAuth flag={false}>
+                  <LoginPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <RequireAuth>
+                  <App />
+                </RequireAuth>
+              }
+            />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>
