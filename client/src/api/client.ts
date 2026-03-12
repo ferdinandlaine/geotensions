@@ -1,7 +1,7 @@
-const BASE_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL
 
 export async function fetchApi<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  const response = await fetch(`${API_URL}/${endpoint}`, {
     headers: { 'Content-Type': 'application/json' },
     signal,
   })
