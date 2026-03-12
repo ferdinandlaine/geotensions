@@ -28,11 +28,11 @@ function isViewportAtBoundsEdge(
 }
 
 interface MapViewProps {
-  onBoundsChange: (bounds: LngLatBounds) => void
   controlsPortal: RefObject<HTMLElement | null>
+  onBoundsChange: (bounds: LngLatBounds) => void
 }
 
-function MapView({ children, onBoundsChange, controlsPortal }: PropsWithChildren<MapViewProps>) {
+function MapView({ children, controlsPortal, onBoundsChange }: PropsWithChildren<MapViewProps>) {
   const mapRef = useRef<MapRef>(null)
   const [bounds, setBounds] = useState<LngLatBounds | null>(null)
   const [zoom, setZoom] = useState(MAP_CONFIG.INITIAL_ZOOM)
@@ -90,8 +90,8 @@ function MapView({ children, onBoundsChange, controlsPortal }: PropsWithChildren
         maxZoom={MAP_CONFIG.MAX_ZOOM}
         maxBounds={MAP_CONFIG.MAX_BOUNDS}
         dragRotate={false}
-        attributionControl={false}
         renderWorldCopies={false}
+        attributionControl={false}
         onLoad={handleMapLoad}
         onMove={handleViewStateChange}
       >

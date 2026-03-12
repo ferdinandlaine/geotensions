@@ -10,6 +10,7 @@ import RequireAuth from './components/RequireAuth'
 import { AuthProvider } from './contexts/AuthContext'
 import App from './pages/App'
 import LoginPage from './pages/LoginPage'
+import NotFound from './pages/NotFound'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -46,6 +47,7 @@ createRoot(root).render(
                 </RequireAuth>
               }
             />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>

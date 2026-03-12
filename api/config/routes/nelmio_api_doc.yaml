@@ -5,7 +5,7 @@
 #     defaults: { _controller: nelmio_api_doc.controller.swagger }
 
 app.redoc:
-    path: /api/doc
+    path: /
     methods: GET
     defaults:
         _controller: nelmio_api_doc.controller.redocly

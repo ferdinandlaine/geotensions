@@ -9,13 +9,13 @@ export function fetchEvents(query: EventsQuery, signal?: AbortSignal) {
   const { bbox, filters } = query
 
   return fetchApi<EventCollection>(
-    `/events?bbox=${bbox.join(',')}&${filtersToAPIParams(filters)}`,
+    `events?bbox=${bbox.join(',')}&${filtersToAPIParams(filters)}`,
     signal
   )
 }
 
 export function fetchEventTypes() {
-  return fetchApi<EventTypeMap>(`/types`)
+  return fetchApi<EventTypeMap>(`types`)
 }
 
 function filtersToAPIParams(filters: EventFilters): URLSearchParams {

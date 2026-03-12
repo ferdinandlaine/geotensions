@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_URL
+const API_URL = import.meta.env.VITE_API_URL
 const TOKEN_KEY = 'auth_token'
 
 export function getToken() {
@@ -19,7 +19,7 @@ function authHeaders(): Record<string, string> {
 }
 
 export async function fetchApi<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  const response = await fetch(`${API_URL}/${endpoint}`, {
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     signal,
   })
@@ -38,7 +38,7 @@ export async function fetchApi<T>(endpoint: string, signal?: AbortSignal): Promi
 }
 
 export async function postApi<T>(endpoint: string, body: Record<string, unknown>): Promise<T> {
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
+  const response = await fetch(`${API_URL}/${endpoint}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: JSON.stringify(body),

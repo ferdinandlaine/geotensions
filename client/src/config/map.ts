@@ -2,13 +2,8 @@ import type { LngLatBoundsLike } from 'maplibre-gl'
 
 export const MAP_CONFIG = {
   MAX_BOUNDS: [
-    // World
-    [-179.99, -65],
+    [-179.99, -65], // -179.99 avoids rendering bug at the antimeridian
     [180, 85],
-
-    // France
-    // [-5.5, 41],
-    // [10, 51.5],
   ] as LngLatBoundsLike,
   INITIAL_VIEW_STATE: {
     longitude: 2.35 as number,
