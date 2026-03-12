@@ -1,13 +1,21 @@
 import { IconBrandGithub } from '@tabler/icons-react'
 import type { ComponentProps } from 'react'
 
-import { Sidebar, SidebarContent, SidebarFooter, SidebarSeparator } from '@/components/ui/sidebar'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarSeparator,
+  useSidebar,
+} from '@/components/ui/sidebar'
 
 import { Button } from './ui/button'
 
 function AppSidebar({ children, ...props }: ComponentProps<typeof Sidebar>) {
+  const { open } = useSidebar()
+
   return (
-    <Sidebar {...props}>
+    <Sidebar inert={!open} {...props}>
       <SidebarContent className="py-2">{children}</SidebarContent>
       <SidebarSeparator className="mx-0" />
       <SidebarFooter className="flex items-center gap-0">
