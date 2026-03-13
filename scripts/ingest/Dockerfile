@@ -1,14 +1,13 @@
+# syntax=docker/dockerfile:1
+
 FROM python:3.12-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y --no-install-recommends cron \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY requirements.txt .
+COPY scripts/ingest/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY --chmod=400 ingest_acled.py .
-COPY --chmod=500 run_ingest.sh .
+COPY scripts/ingest/ingest_acled.py .
+RUN chmod 400 ingest_acled.py
 
-CMD ["/app/run_ingest.sh"]
+CMD ["python", "ingest_acled.py"]

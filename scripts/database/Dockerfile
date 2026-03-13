@@ -6,6 +6,6 @@ RUN apt-get update \
         postgis \
     && rm -rf /var/lib/apt/lists/*
 
-COPY init.sql /docker-entrypoint-initdb.d/
+COPY scripts/database/init.sql /docker-entrypoint-initdb.d/
 
 CMD ["postgres"]
