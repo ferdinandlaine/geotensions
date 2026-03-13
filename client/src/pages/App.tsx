@@ -37,7 +37,7 @@ function App() {
     }
   }, [debouncedBounds, dateRange, eventTypes])
 
-  const { data: events, isFetching, isError } = useEvents(query)
+  const { isFetching, isError } = useEvents(query)
 
   return (
     <>
