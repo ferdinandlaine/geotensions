@@ -21,7 +21,7 @@ make dev
 ```
 
 - Access web app: **http://localhost:5173**
-- Browse API documentation: **http://localhost:8000/api/doc**
+- Browse API documentation: **http://localhost:8080/api/doc**
 
 ## Commands
 
