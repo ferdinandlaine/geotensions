@@ -30,6 +30,7 @@ make dev
 | `make dev`         | Start development environment                     |
 | `make api`         | Rebuild and restart API services                  |
 | `make create-user` | Create a user (make create-user u=admin p=secret) |
+| `make ingest`      | Run data ingestion script (one-shot)              |
 | `make clean`       | Clean generated files and remove volumes          |
 
 ## ACLED Data & Methodology
@@ -40,10 +41,16 @@ make dev
 ### Data Ingestion
 
 1. Export data with all output options unchecked
-2. Place CSV files in `/data/incoming/` — the ingestion service processes them automatically:
-   - Events are normalized and inserted into PostgreSQL with PostGIS geometry
-   - Duplicates are handled via `acled_id` unique constraint (updates only if timestamp is newer)
-   - Processed files are archived to `data/archived/` with timestamp
+2. Place CSV files in `data/incoming/`
+3. **Run ingestion manually**:
+
+   ```bash
+   make ingest
+   ```
+
+   - Events normalized and inserted with PostGIS geometry
+   - Duplicates handled via acled_id unique constraint (upserts only if newer timestamp)
+   - Files archived to `data/archived/` with timestamp
 
 ### Critical Interpretation Notes
 

@@ -5,8 +5,7 @@ services:
       dockerfile: api/Dockerfile
     ports:
       - "${API_PORT:-8080}:8080"
-    env_file:
-      - api/.env
+    env_file: api/.env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@database:5432/${POSTGRES_DB}?serverVersion=18&charset=utf8
     depends_on:
@@ -17,13 +16,14 @@ services:
       context: .
       dockerfile: client/Dockerfile
       args:
-        VITE_API_URL: http://localhost:${API_PORT}/api
+        VITE_API_URL: http://localhost:${API_PORT:-8080}/api
     ports:
       - "${CLIENT_PORT:-80}:80"
 
   database:
     build:
-      context: ./scripts/database
+      context: .
+      dockerfile: scripts/database/Dockerfile
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     environment:
@@ -35,7 +35,8 @@ services:
 
   ingest:
     build:
-      context: ./scripts/ingest
+      context: .
+      dockerfile: scripts/ingest/Dockerfile
     volumes:
       - ./data:/data
     environment:

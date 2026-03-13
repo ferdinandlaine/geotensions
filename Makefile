@@ -11,6 +11,12 @@ api: # Rebuild and restart API services
 	docker compose up -d --build api
 	docker compose exec api composer install --no-interaction
 
+database: # Start database only
+	docker compose up -d database
+
+ingest: database # Data ingestion script (one-shot)
+	docker compose run --rm ingest python ingest_acled.py
+
 create-user: # Create a user (usage: make create-user u=admin p=secret)
 	docker compose exec api bin/console app:create-user $(u) $(p)
 
