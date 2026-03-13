@@ -1,4 +1,4 @@
-import { IconBrandGithub } from '@tabler/icons-react'
+import { IconBrandGithub, IconLogout2 } from '@tabler/icons-react'
 import type { ComponentProps } from 'react'
 
 import {
@@ -8,10 +8,12 @@ import {
   SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { useAuth } from '@/contexts/AuthContext'
 
 import { Button } from './ui/button'
 
 function AppSidebar({ children, ...props }: ComponentProps<typeof Sidebar>) {
+  const { logout } = useAuth()
   const { open } = useSidebar()
 
   return (
@@ -19,6 +21,11 @@ function AppSidebar({ children, ...props }: ComponentProps<typeof Sidebar>) {
       <SidebarContent className="py-2">{children}</SidebarContent>
       <SidebarSeparator className="mx-0" />
       <SidebarFooter className="flex items-center gap-0">
+        <Button onClick={logout} variant="ghost">
+          <IconLogout2 />
+          Logout
+        </Button>
+
         <a
           href="https://github.com/ferdinandlaine/geotensions"
           target="_blank"

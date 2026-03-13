@@ -3,17 +3,17 @@ import { startOfDay, subYears } from 'date-fns'
 import { useMemo, useRef, useState } from 'react'
 import type { LngLatBounds } from 'react-map-gl/maplibre'
 
-import AppSidebar from './components/AppSidebar'
-import { Alert, AlertDescription } from './components/ui/alert'
-import { SidebarProvider, SidebarSeparator, SidebarTrigger } from './components/ui/sidebar'
-import { Spinner } from './components/ui/spinner'
-import { DateRangeFilter, EventTypeFilter } from './features/Filters'
-import { MapView } from './features/Map'
-import { TimeBrush } from './features/TimeBrush'
-import { useDebounced } from './hooks/useDebounced'
-import { useEvents } from './hooks/useEvents'
-import type { BBox, EventsQuery } from './types/event'
-import { type DateRange, isValidDateRange } from './types/filter'
+import AppSidebar from '@/components/AppSidebar'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { SidebarProvider, SidebarSeparator, SidebarTrigger } from '@/components/ui/sidebar'
+import { Spinner } from '@/components/ui/spinner'
+import { DateRangeFilter, EventTypeFilter } from '@/features/Filters'
+import { MapView } from '@/features/Map'
+import { TimeBrush } from '@/features/TimeBrush'
+import { useDebounced } from '@/hooks/useDebounced'
+import { useEvents } from '@/hooks/useEvents'
+import type { BBox, EventsQuery } from '@/types/event'
+import { type DateRange, isValidDateRange } from '@/types/filter'
 
 function App() {
   const mapControlsRef = useRef<HTMLDivElement>(null)
@@ -77,6 +77,7 @@ function App() {
             <TimeBrush className="max-w-4xl pb-8" value={dateRange} onChange={setDateRange} />
           </div>
 
+          {/* Portal target to position map controls last in tab order */}
           <div ref={mapControlsRef} className="absolute top-4 right-4 flex gap-2" />
         </main>
       </SidebarProvider>

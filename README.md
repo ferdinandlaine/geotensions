@@ -25,11 +25,12 @@ make dev
 
 ## Commands
 
-| Command      | Description                              |
-| ------------ | ---------------------------------------- |
-| `make dev`   | Start development environment            |
-| `make api`   | Rebuild and restart API services         |
-| `make clean` | Clean generated files and remove volumes |
+| Command            | Description                                       |
+| ------------------ | ------------------------------------------------- |
+| `make dev`         | Start development environment                     |
+| `make api`         | Rebuild and restart API services                  |
+| `make create-user` | Create a user (make create-user u=admin p=secret) |
+| `make clean`       | Clean generated files and remove volumes          |
 
 ## ACLED Data & Methodology
 

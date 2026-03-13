@@ -54,3 +54,21 @@ CREATE INDEX events_date_id_idx ON events(date DESC, id DESC);
 
 -- Event type index (for filtering by event type)
 CREATE INDEX events_type_idx ON events(type);
+
+-- Authentication
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL, -- bcrypt via PHP password_hash()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE auth_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token CHAR(64) NOT NULL UNIQUE,
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX auth_tokens_token_idx ON auth_tokens(token);

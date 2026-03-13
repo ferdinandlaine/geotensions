@@ -1,4 +1,4 @@
-.PHONY: dev api clean
+.PHONY: dev api create-user clean
 
 dev: # Start development environment
 	@if [ ! -f .env ]; then cp .env.example .env; fi
@@ -10,6 +10,9 @@ dev: # Start development environment
 api: # Rebuild and restart API services
 	docker compose up -d --build nginx php-fpm
 	docker compose exec php-fpm composer install --no-interaction
+
+create-user: # Create a user (usage: make create-user u=admin p=secret)
+	docker compose exec php-fpm bin/console app:create-user $(u) $(p)
 
 clean: # Clean generated files and remove volumes
 	docker compose down -v
