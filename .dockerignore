@@ -1,0 +1,27 @@
+# API - Symfony
+api/public/bundles/
+api/vendor/
+api/var/
+
+# Client - Node + Vite
+client/node_modules/
+client/dist/
+
+# Environment
+**/.env*
+
+# Docker
+**/Dockerfile
+**/.dockerignore
+
+# Config
+**/.editorconfig
+**/.gitignore
+**/.prettierrc
+**/.prettierignore
+
+# Docs
+**/*.md
+
+# OS
+**/.DS_Store
