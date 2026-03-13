@@ -25,7 +25,10 @@ function LoginPage() {
     setError(null)
 
     try {
-      const { token } = await postApi<{ token: string }>('login', { username, password })
+      const { token } = await postApi<{ token: string }>('login', {
+        username: username.trim().toLowerCase(),
+        password,
+      })
 
       login(token)
       document.startViewTransition(() => {

@@ -44,17 +44,20 @@ class AuthController extends AbstractController
     public function login(Request $request): JsonResponse
     {
         $payload = json_decode($request->getContent(), true);
+        
         if (empty($payload['username']) || empty($payload['password'])) {
             return $this->json(['error' => 'missing_credentials', 'message' => 'username and password are required'], 400);
         }
 
-        $user = $this->userRepository->findByUsername($payload['username']);
+        $username = trim(strtolower($payload['username']));
+        $user = $this->userRepository->findByUsername($username);
+
         if (!$user || !password_verify($payload['password'], $user['password_hash'])) {
             return $this->json(['error' => 'invalid_credentials', 'message' => 'Invalid username or password'], 401);
         }
 
         $token = $this->userRepository->createToken($user['id']);
+
         return $this->json(['token' => $token]);
     }
-
 }
