@@ -41,7 +41,7 @@ make dev
 ### Data Ingestion
 
 1. Export data with all output options unchecked
-2. Place CSV files in `data/incoming/`
+2. Place CSV files in `data/` directory
 3. **Run ingestion manually**:
 
    ```bash
@@ -50,7 +50,6 @@ make dev
 
    - Events normalized and inserted with PostGIS geometry
    - Duplicates handled via acled_id unique constraint (upserts only if newer timestamp)
-   - Files archived to `data/archived/` with timestamp
 
 ### Critical Interpretation Notes
 
