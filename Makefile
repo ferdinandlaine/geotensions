@@ -4,6 +4,7 @@ dev: # Start development environment
 	@if [ ! -f .env ]; then cp .env.example .env; fi
 	@if [ ! -f api/.env ]; then cp api/.env.example api/.env; fi
 	@if [ ! -f client/.env ]; then cp client/.env.example client/.env; fi
+	@if [ ! -f scripts/ingest/.env ]; then cp scripts/ingest/.env.example scripts/ingest/.env; fi
 	docker compose up -d --build api database ingest
 	cd client && pnpm install && pnpm dev
 
@@ -14,7 +15,7 @@ api: # Rebuild and restart API services
 database: # Start database only
 	docker compose up -d database
 
-ingest: database # Data ingestion script (one-shot)
+ingest: database # Ingest CSV files from data/ directory (one-shot)
 	docker compose run --rm ingest python ingest_acled.py
 
 create-user: # Create a user (usage: make create-user u=admin p=secret)
