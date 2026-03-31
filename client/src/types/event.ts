@@ -18,7 +18,6 @@ export interface EventCollection {
   type: 'FeatureCollection'
   features: Event[]
   is_truncated: boolean
-  total_count: number
 }
 
 export type EventTypeMap = Record<string, string[]>

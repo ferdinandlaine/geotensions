@@ -14,6 +14,7 @@ RUN echo "APP_ENV=prod" > .env \
     && composer dump-env prod --empty
 
 COPY api/nginx.conf /etc/nginx/nginx.conf
+COPY api/zz-fpm.conf /usr/local/etc/php-fpm.d/zz-fpm.conf
 
 EXPOSE 8080
 

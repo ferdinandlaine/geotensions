@@ -122,9 +122,7 @@ class EventsController extends AbstractController
                                     new OA\Property(property: 'source_scale', type: 'string', example: 'National'),
                                     new OA\Property(property: 'notes', type: 'string', example: 'On 26 January 2024, in the morning, farmers set up a road blockade on the A7 highway in Piolenc (Provence-Alpes-Cote d\'Azur). The event was part of a nationwide farmers\' demonstration movement called by FNSEA and JA against rising production costs, stricter environmental norms restricting the use of pesticides, foreign imports, and bureaucratic constraints. One demonstrator was knocked down by a lorry attempting to break through the roadblock after the farmers blocking the road started to inspect the lorry\'s cargo, sustaining mild injuries to his wrist.'),
                                     new OA\Property(property: 'tags', type: 'string', nullable: true, example: 'crowd size=no report'),
-                                    new OA\Property(property: 'timestamp', type: 'integer', example: 1712695337),
-                                    new OA\Property(property: 'imported_at', type: 'string', format: 'date-time', example: '2024-04-09T19:28:57Z'),
-                                    new OA\Property(property: 'updated_at', type: 'string', format: 'date-time', example: '2024-04-09T19:28:57Z')
+                                    new OA\Property(property: 'timestamp', type: 'integer', example: 1712695337)
                                 ],
                                 type: 'object'
                             )
@@ -133,7 +131,6 @@ class EventsController extends AbstractController
                     )
                 ),
                 new OA\Property(property: 'is_truncated', type: 'boolean', example: false),
-                new OA\Property(property: 'total_count', type: 'integer', example: 1),
             ],
             type: 'object'
         )
@@ -231,9 +228,11 @@ class EventsController extends AbstractController
 
         // Sanitize limit parameter (clamped: 1-5000)
         $limit = max(1, min(5000, $limit));
-        $events = $this->eventRepository->find($filters, $limit);
-        // Extract total count from window function
-        $totalCount = !empty($events) ? (int) $events[0]['total_count'] : 0;
+        $events = $this->eventRepository->find($filters, $limit + 1);
+        $isTruncated = count($events) > $limit;
+        if ($isTruncated) {
+            $events = array_slice($events, 0, $limit);
+        }
 
         // Transform to GeoJSON format
         $features = [];
@@ -243,14 +242,8 @@ class EventsController extends AbstractController
             // Extract acled_id for Feature ID
             $acledId = $event['acled_id'];
 
-            // Format timestamps without milliseconds (ISO 8601 with Z for UTC)
-            $importedAt = new \DateTime($event['imported_at']);
-            $updatedAt = new \DateTime($event['updated_at']);
-            $event['imported_at'] = $importedAt->format('Y-m-d\TH:i:s\Z');
-            $event['updated_at'] = $updatedAt->format('Y-m-d\TH:i:s\Z');
-
             // Remove from properties to avoid duplication
-            unset($event['geom'], $event['acled_id'], $event['id'], $event['total_count']);
+            unset($event['geom'], $event['acled_id'], $event['id']);
 
             $features[] = [
                 'type' => 'Feature',
@@ -263,8 +256,7 @@ class EventsController extends AbstractController
         $geojson = [
             'type' => 'FeatureCollection',
             'features' => $features,
-            'is_truncated' => $totalCount > $limit,
-            'total_count' => $totalCount,
+            'is_truncated' => $isTruncated,
         ];
 
         return $this->json($geojson);
