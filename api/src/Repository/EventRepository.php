@@ -70,10 +70,7 @@ class EventRepository
             'source',
             'source_scale',
             'notes',
-            'tags',
-            'imported_at',
-            'updated_at',
-            'COUNT(*) OVER() as total_count'
+            'tags'
         )
             ->from('events');
 
