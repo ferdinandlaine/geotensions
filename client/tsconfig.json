@@ -1,5 +1,5 @@
 {
-  "include": ["src"],
+  "include": ["src", "./vitest-setup.ts"],
   "compilerOptions": {
     "target": "ES2022",
     "useDefineForClassFields": true,
