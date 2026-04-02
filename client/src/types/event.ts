@@ -1,6 +1,6 @@
 import type { EventFilters } from './filter'
 
-export interface Event {
+export interface EventFeature {
   type: 'Feature'
   id: string
   geometry: {
@@ -16,7 +16,7 @@ export interface Event {
 
 export interface EventCollection {
   type: 'FeatureCollection'
-  features: Event[]
+  features: EventFeature[]
   is_truncated: boolean
 }
 

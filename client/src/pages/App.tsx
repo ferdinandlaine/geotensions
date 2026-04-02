@@ -12,8 +12,9 @@ import { MapView } from '@/features/Map'
 import { TimeBrush } from '@/features/TimeBrush'
 import { useDebounced } from '@/hooks/useDebounced'
 import { useEvents } from '@/hooks/useEvents'
+import { isValidDateRange } from '@/lib/utils'
 import type { BBox, EventsQuery } from '@/types/event'
-import { type DateRange, isValidDateRange } from '@/types/filter'
+import type { DateRange } from '@/types/filter'
 
 function App() {
   const mapControlsRef = useRef<HTMLDivElement>(null)
