@@ -4,8 +4,11 @@ import { Layer, Map, type MapRef, Source, type StyleSpecification } from 'react-
 
 import minimap from '@/assets/map-styles/minimap.json'
 import { MAP_CONFIG } from '@/config/map'
+import { useMap } from '@/contexts/MapContext'
 import { type DragEvent, useDrag } from '@/hooks/useDrag'
 import { useWheel } from '@/hooks/useWheel'
+
+import { useZoomConstraints } from './useZoomConstraints'
 
 // Pre-computed Mercator bounds (used for aspect ratio and viewport pixel size)
 const maxBounds = LngLatBounds.convert(MAP_CONFIG.MAX_BOUNDS)
@@ -19,16 +22,9 @@ const MINIMAP_WIDTH_PX = 192 // w-48 = 12rem
 const MINIMAP_HEIGHT_PX = MINIMAP_WIDTH_PX / aspectRatio
 const RECTANGLE_MIN_PX = 4 // threshold below which rectangle switches to point
 
-interface MinimapProps {
-  viewportBounds: LngLatBounds | null
-  canZoomIn: boolean
-  canZoomOut: boolean
-  onClick: (lng: number, lat: number) => void
-  onDrag: (lng: number, lat: number) => void
-  onZoom: (zoomDelta: number) => void
-}
-
-function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoom }: MinimapProps) {
+function Minimap() {
+  const { mapRef, bounds } = useMap()
+  const { canZoomIn, canZoomOut } = useZoomConstraints()
   const containerRef = useRef<HTMLDivElement>(null)
   const minimapRef = useRef<MapRef>(null)
   const [mapReady, setMapReady] = useState(false)
@@ -46,17 +42,19 @@ function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoo
   }
 
   const handleDragStart = (event: DragEvent) => {
+    const map = mapRef.current?.getMap()
     const lngLat = minimapRef.current?.getMap()?.unproject([event.x, event.y])
-    if (!lngLat) return
+    if (!map || !lngLat) return
 
-    onClick(lngLat.lng, lngLat.lat)
+    map.stop().easeTo({ center: [lngLat.lng, lngLat.lat] })
   }
 
   const handleDrag = (event: DragEvent) => {
+    const map = mapRef.current?.getMap()
     const lngLat = minimapRef.current?.getMap()?.unproject([event.x, event.y])
-    if (!lngLat) return
+    if (!map || !lngLat) return
 
-    onDrag(lngLat.lng, lngLat.lat)
+    map.stop().setCenter([lngLat.lng, lngLat.lat])
   }
 
   useDrag(
@@ -65,18 +63,20 @@ function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoo
       onStart: handleDragStart,
       onDrag: handleDrag,
     },
-    {
-      threshold: 5,
-    }
+    { threshold: 5 }
   )
+
+  const handleZoom = (delta: number) => {
+    const map = mapRef.current?.getMap()
+    if (!map) return
+
+    map.setZoom(map.getZoom() + delta * 0.05)
+  }
 
   useWheel(
     containerRef,
-    { onWheel: onZoom },
-    {
-      canScrollUp: canZoomIn,
-      canScrollDown: canZoomOut,
-    }
+    { onWheel: handleZoom },
+    { canScrollUp: canZoomIn, canScrollDown: canZoomOut }
   )
 
   // Derive GeoJSON data and visibility from bounds
@@ -84,10 +84,10 @@ function Minimap({ viewportBounds, canZoomIn, canZoomOut, onClick, onDrag, onZoo
   let pointData: GeoJSON.Feature<GeoJSON.Point> | null = null
   let showAsRect = true
 
-  if (viewportBounds) {
-    const sw = viewportBounds.getSouthWest()
-    const ne = viewportBounds.getNorthEast()
-    const center = viewportBounds.getCenter()
+  if (bounds) {
+    const sw = bounds.getSouthWest()
+    const ne = bounds.getNorthEast()
+    const center = bounds.getCenter()
 
     rectangleData = {
       type: 'Feature',

@@ -8,6 +8,7 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import RequireAuth from './components/RequireAuth'
 import { AuthProvider } from './contexts/AuthContext'
+import { MapProvider } from './contexts/MapContext'
 import App from './pages/App'
 import LoginPage from './pages/LoginPage'
 import NotFound from './pages/NotFound'
@@ -43,7 +44,9 @@ createRoot(root).render(
               path="/"
               element={
                 <RequireAuth>
-                  <App />
+                  <MapProvider>
+                    <App />
+                  </MapProvider>
                 </RequireAuth>
               }
             />

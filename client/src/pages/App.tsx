@@ -1,14 +1,15 @@
 import { IconAlertCircle } from '@tabler/icons-react'
 import { startOfDay, subYears } from 'date-fns'
 import { useMemo, useRef, useState } from 'react'
-import type { LngLatBounds } from 'react-map-gl/maplibre'
+import { type LngLatBounds } from 'react-map-gl/maplibre'
 
 import AppSidebar from '@/components/AppSidebar'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { SidebarProvider, SidebarSeparator, SidebarTrigger } from '@/components/ui/sidebar'
 import { Spinner } from '@/components/ui/spinner'
+import { useMap } from '@/contexts/MapContext'
 import { DateRangeFilter, EventTypeFilter } from '@/features/Filters'
-import { MapView } from '@/features/Map'
+import { Map } from '@/features/Map'
 import { TimeBrush } from '@/features/TimeBrush'
 import { useDebounced } from '@/hooks/useDebounced'
 import { useEvents } from '@/hooks/useEvents'
@@ -17,13 +18,13 @@ import type { BBox, EventsQuery } from '@/types/event'
 import type { DateRange } from '@/types/filter'
 
 function App() {
+  const { bounds } = useMap()
   const mapControlsRef = useRef<HTMLDivElement>(null)
-  const [bounds, setBounds] = useState<LngLatBounds | null>(null)
+  const [eventTypes, setEventTypes] = useState<string[]>([])
   const [dateRange, setDateRange] = useState<DateRange>({
     from: startOfDay(subYears(new Date(), 2)),
     to: startOfDay(subYears(new Date(), 1)),
   })
-  const [eventTypes, setEventTypes] = useState<string[]>([])
 
   const debouncedBounds = useDebounced(bounds, 300)
   const query = useMemo<EventsQuery | undefined>(() => {
@@ -31,58 +32,50 @@ function App() {
 
     return {
       bbox: normalizeBbox(debouncedBounds),
-      filters: {
-        dateRange,
-        eventTypes,
-      },
+      filters: { dateRange, eventTypes },
     }
   }, [debouncedBounds, dateRange, eventTypes])
 
   const { isFetching, isError } = useEvents(query)
 
   return (
-    <>
-      <SidebarProvider>
-        <AppSidebar variant="floating" className="pr-0">
-          <DateRangeFilter
-            value={dateRange}
-            onChange={(range) => isValidDateRange(range) && setDateRange(range)}
-          />
-          <SidebarSeparator className="mx-0" />
-          <EventTypeFilter value={eventTypes} onChange={setEventTypes} />
-        </AppSidebar>
+    <SidebarProvider>
+      <AppSidebar variant="floating" className="pr-0">
+        <DateRangeFilter
+          value={dateRange}
+          onChange={(range) => isValidDateRange(range) && setDateRange(range)}
+        />
+        <SidebarSeparator className="mx-0" />
+        <EventTypeFilter value={eventTypes} onChange={setEventTypes} />
+      </AppSidebar>
 
-        <SidebarTrigger className="relative top-4 left-4 order-1" />
+      <SidebarTrigger className="relative top-4 left-4 order-1" />
 
-        <main className="fixed inset-0">
-          <MapView onBoundsChange={setBounds} controlsPortal={mapControlsRef}>
-            {/* TODO: Add EventsLayer */}
-            {/* <EventsLayer events={events} /> */}
-          </MapView>
+      <main className="fixed inset-0">
+        <Map controlsPortal={mapControlsRef} />
 
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 px-8 *:pointer-events-auto">
-            {isFetching && (
-              <div className="bg-background/75 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm backdrop-blur-xs">
-                <Spinner />
-                <span>Loading events…</span>
-              </div>
-            )}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-4 px-8 *:pointer-events-auto">
+          {isFetching && (
+            <div className="bg-background/75 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm backdrop-blur-xs">
+              <Spinner />
+              <span>Loading events…</span>
+            </div>
+          )}
 
-            {isError && (
-              <Alert variant="destructive" className="w-fit">
-                <IconAlertCircle />
-                <AlertDescription>Failed to load events</AlertDescription>
-              </Alert>
-            )}
+          {isError && (
+            <Alert variant="destructive" className="w-fit">
+              <IconAlertCircle />
+              <AlertDescription>Failed to load events</AlertDescription>
+            </Alert>
+          )}
 
-            <TimeBrush className="max-w-4xl pb-8" value={dateRange} onChange={setDateRange} />
-          </div>
+          <TimeBrush className="max-w-4xl pb-8" value={dateRange} onChange={setDateRange} />
+        </div>
 
-          {/* Portal target to position map controls last in tab order */}
-          <div ref={mapControlsRef} className="absolute top-4 right-4 flex gap-2" />
-        </main>
-      </SidebarProvider>
-    </>
+        {/* Portal target to position map controls last in tab order */}
+        <div ref={mapControlsRef} className="absolute top-4 right-4 flex gap-2" />
+      </main>
+    </SidebarProvider>
   )
 }
 

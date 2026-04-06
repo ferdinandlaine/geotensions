@@ -1,24 +1,17 @@
 import { IconMinus, IconPlus } from '@tabler/icons-react'
-import type { RefObject } from 'react'
-import type { MapRef } from 'react-map-gl/maplibre'
 
 import { Button } from '@/components/ui/button'
 import { ButtonGroup } from '@/components/ui/button-group'
+import { useMap } from '@/contexts/MapContext'
 
-interface MapControlsProps {
-  mapRef: RefObject<MapRef | null>
-  canZoomIn: boolean
-  canZoomOut: boolean
-}
+import { useZoomConstraints } from './useZoomConstraints'
 
-function MapControls({ mapRef, canZoomIn, canZoomOut }: MapControlsProps) {
-  const zoomIn = () => {
-    mapRef.current?.getMap()?.zoomIn()
-  }
+function MapControls() {
+  const { mapRef } = useMap()
+  const { canZoomIn, canZoomOut } = useZoomConstraints()
 
-  const zoomOut = () => {
-    mapRef.current?.getMap()?.zoomOut()
-  }
+  const zoomIn = () => mapRef.current?.getMap()?.zoomIn()
+  const zoomOut = () => mapRef.current?.getMap()?.zoomOut()
 
   return (
     <ButtonGroup orientation="vertical" aria-label="Map controls">
