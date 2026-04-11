@@ -3,8 +3,6 @@
 namespace App\Controller;
 
 use App\Repository\EventRepository;
-use App\Security\RequireAuth;
-use Nelmio\ApiDocBundle\Attribute\Security;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -125,10 +123,6 @@ class EventsController extends AbstractController
         schema: new OA\Schema(type: 'integer', default: 2500, minimum: 1, maximum: 5000, example: 2500)
     )]
     #[OA\Response(
-        response: 401,
-        description: 'Unauthorized: missing or invalid authentication token'
-    )]
-    #[OA\Response(
         response: 200,
         description: 'GeoJSON FeatureCollection',
         content: new OA\JsonContent(
@@ -197,8 +191,6 @@ class EventsController extends AbstractController
             type: 'object'
         )
     )]
-    #[Security(name: 'bearerAuth')]
-    #[RequireAuth]
     public function getEvents(
         #[MapQueryParameter] string $bbox,
         #[MapQueryParameter('date_from')] string $dateFrom,

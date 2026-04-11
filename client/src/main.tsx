@@ -6,11 +6,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
-import RequireAuth from './components/RequireAuth'
-import { AuthProvider } from './contexts/AuthContext'
 import { MapProvider } from './contexts/MapContext'
 import App from './pages/App'
-import LoginPage from './pages/LoginPage'
 import NotFound from './pages/NotFound'
 
 const queryClient = new QueryClient({
@@ -30,29 +27,17 @@ createRoot(root).render(
       <ReactQueryDevtools />
 
       <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route
-              path="/login"
-              element={
-                <RequireAuth flag={false}>
-                  <LoginPage />
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/"
-              element={
-                <RequireAuth>
-                  <MapProvider>
-                    <App />
-                  </MapProvider>
-                </RequireAuth>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <MapProvider>
+                <App />
+              </MapProvider>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>
