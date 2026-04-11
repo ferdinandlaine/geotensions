@@ -174,4 +174,4 @@ function Minimap() {
   )
 }
 
-export default Minimap
+export { Minimap }

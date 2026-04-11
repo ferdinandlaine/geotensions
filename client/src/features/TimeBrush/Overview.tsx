@@ -128,4 +128,4 @@ function Overview({ xScale, visibleDomain, selectedRange, className, onTeleport 
   )
 }
 
-export default Overview
+export { Overview }

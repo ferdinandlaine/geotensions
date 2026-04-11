@@ -30,4 +30,4 @@ function TimeAxis({ xScale }: TimeAxisProps) {
   )
 }
 
-export default TimeAxis
+export { TimeAxis }

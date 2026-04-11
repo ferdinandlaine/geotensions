@@ -167,4 +167,4 @@ function Brush({ xScale, selection, className, onSelectionChange }: MainBrushPro
   )
 }
 
-export default Brush
+export { Brush }

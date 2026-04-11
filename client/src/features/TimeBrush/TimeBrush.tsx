@@ -8,10 +8,10 @@ import { useResizeObserver } from '@/hooks/useResizeObserver'
 import { cn } from '@/lib/utils'
 import type { DateRange } from '@/types/filter'
 
-import Brush from './Brush'
+import { Brush } from './Brush'
 import { KeyboardShortcutsHint } from './KeyboardShortcutsHint'
-import Overview from './Overview'
-import TimeAxis from './TimeAxis'
+import { Overview } from './Overview'
+import { TimeAxis } from './TimeAxis'
 import { useKeyboardControls } from './useKeyboardControls'
 
 export interface TimeBrushProps {

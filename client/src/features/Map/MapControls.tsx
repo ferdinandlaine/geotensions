@@ -38,4 +38,4 @@ function MapControls() {
   )
 }
 
-export default MapControls
+export { MapControls }
