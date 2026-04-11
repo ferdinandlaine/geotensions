@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, type PropsWithChildren, useContext, useState } from 'react'
 
-import { clearToken, getToken, setToken } from '@/api/client'
+import { getToken, removeToken, setToken } from '@/lib/token'
 
 interface AuthContextValue {
   isAuthenticated: boolean
@@ -31,7 +31,7 @@ function AuthProvider({ children }: PropsWithChildren) {
 
   const logout = () => {
     setIsAuthenticated(false)
-    clearToken()
+    removeToken()
   }
 
   return (

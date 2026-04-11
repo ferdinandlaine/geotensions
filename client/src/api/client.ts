@@ -1,33 +1,20 @@
+import { getToken, removeToken } from '@/lib/token'
+
 const API_URL = import.meta.env.VITE_API_URL
-const TOKEN_KEY = 'auth_token'
 
-export function getToken() {
-  return localStorage.getItem(TOKEN_KEY)
-}
-
-export function setToken(token: string) {
-  localStorage.setItem(TOKEN_KEY, token)
-}
-
-export function clearToken() {
-  localStorage.removeItem(TOKEN_KEY)
-}
-
-function authHeaders(): Record<string, string> {
+async function request<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const token = getToken()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
-export async function fetchApi<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(`${API_URL}/${endpoint}`, {
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    signal,
+  const headers = new Headers({
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   })
 
+  const response = await fetch(`${API_URL}/${endpoint}`, { headers, ...options })
+
   if (response.status === 401) {
-    clearToken()
+    removeToken()
     window.location.href = '/login'
-    throw new Error('Session expired')
+    throw new Error('Unauthorized')
   }
 
   if (!response.ok) {
@@ -37,17 +24,4 @@ export async function fetchApi<T>(endpoint: string, signal?: AbortSignal): Promi
   return response.json()
 }
 
-export async function postApi<T>(endpoint: string, body: Record<string, unknown>): Promise<T> {
-  const response = await fetch(`${API_URL}/${endpoint}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    body: JSON.stringify(body),
-  })
-
-  if (!response.ok) {
-    const data = await response.json()
-    throw new Error(data.error || `HTTP ${response.status}: ${response.statusText}`)
-  }
-
-  return response.json()
-}
+export { request }

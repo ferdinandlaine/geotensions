@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { fetchEvents } from '@/api/events'
+import { getEvents } from '@/api/events'
 import type { EventsQuery } from '@/types/event'
 
 export function useEvents(query: EventsQuery | undefined) {
@@ -8,7 +8,7 @@ export function useEvents(query: EventsQuery | undefined) {
     queryKey: ['events', query],
     queryFn: ({ signal }) => {
       if (!query) throw new Error('Query is not defined!')
-      return fetchEvents(query, signal)
+      return getEvents(query, { signal })
     },
     enabled: !!query,
     placeholderData: (previousData) => previousData,

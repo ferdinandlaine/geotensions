@@ -1,7 +1,7 @@
 import { IconCategory, IconChevronRight } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 
-import { fetchEventTypes } from '@/api/events'
+import { getEventTypes } from '@/api/events'
 import DevBox from '@/components/DevBox'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
@@ -41,7 +41,7 @@ function compact(selected: Set<string>, eventTypes: EventTypeMap): string[] {
 function EventTypeFilter({ value, onChange }: EventFilterProps) {
   const { data: eventTypes, isLoading } = useQuery({
     queryKey: ['eventTypes'],
-    queryFn: fetchEventTypes,
+    queryFn: getEventTypes,
     staleTime: Infinity,
   })
 

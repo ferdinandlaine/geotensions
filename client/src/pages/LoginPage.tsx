@@ -2,7 +2,7 @@ import { IconAlertCircle, IconLogin2 } from '@tabler/icons-react'
 import { type FormEvent, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-import { postApi } from '@/api/client'
+import { request } from '@/api/client'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -25,9 +25,9 @@ function LoginPage() {
     setError(null)
 
     try {
-      const { token } = await postApi<{ token: string }>('login', {
-        username: username.trim().toLowerCase(),
-        password,
+      const { token } = await request<{ token: string }>('login', {
+        method: 'POST',
+        body: JSON.stringify({ username: username.trim().toLowerCase(), password }),
       })
 
       login(token)
