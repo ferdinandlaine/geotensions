@@ -94,8 +94,20 @@ class EventRepository
             ->setParameter('date_to', $dateTo);
 
         if (!empty($types)) {
-            $qb->andWhere($qb->expr()->in('type', ':types'))
-                ->setParameter('types', $types, ArrayParameterType::STRING);
+            $typeKeys = array_keys(self::TYPE_ORDER);
+            $parentTypes = array_values(array_intersect($types, $typeKeys));
+            $subTypes  = array_values(array_diff($types, $typeKeys));
+
+            $conditions = [];
+            if (!empty($parentTypes)) {
+                $qb->setParameter('types', $parentTypes, ArrayParameterType::STRING);
+                $conditions[] = $qb->expr()->in('type', ':types');
+            }
+            if (!empty($subTypes)) {
+                $qb->setParameter('sub_types', $subTypes, ArrayParameterType::STRING);
+                $conditions[] = $qb->expr()->in('sub_type', ':sub_types');
+            }
+            $qb->andWhere($qb->expr()->or(...$conditions));
         }
 
         $qb->orderBy('date', 'DESC')
