@@ -17,11 +17,73 @@ class EventsController extends AbstractController
         private EventRepository $eventRepository
     ) {}
 
+    /**
+     * Parse and validate bbox parameter
+     *
+     * @return float[] [minLon, minLat, maxLon, maxLat]
+     * @throws \InvalidArgumentException
+     */
+    private function parseBbox(string $bboxParam): array
+    {
+        $bbox = explode(',', $bboxParam);
+
+        if (count($bbox) !== 4) {
+            throw new \InvalidArgumentException('bbox must be in format: minLon,minLat,maxLon,maxLat');
+        }
+
+        foreach ($bbox as $coord) {
+            if (!is_numeric($coord)) {
+                throw new \InvalidArgumentException('bbox coordinates must be valid numbers');
+            }
+        }
+
+        $bbox = array_map('floatval', $bbox);
+        [$minLon, $minLat, $maxLon, $maxLat] = $bbox;
+
+        if ($minLon < -180 || $minLon > 180 || $maxLon < -180 || $maxLon > 180) {
+            throw new \InvalidArgumentException('longitude must be between -180 and 180');
+        }
+
+        if ($minLat < -90 || $minLat > 90 || $maxLat < -90 || $maxLat > 90) {
+            throw new \InvalidArgumentException('latitude must be between -90 and 90');
+        }
+
+        if ($minLon >= $maxLon) {
+            throw new \InvalidArgumentException('minLon must be less than maxLon');
+        }
+
+        if ($minLat >= $maxLat) {
+            throw new \InvalidArgumentException('minLat must be less than maxLat');
+        }
+
+        return $bbox;
+    }
+
+    /**
+     * Validate date parameters
+     *
+     * @throws \InvalidArgumentException
+     */
+    private function validateDates(string $dateFrom, string $dateTo): void
+    {
+        foreach (['date_from' => $dateFrom, 'date_to' => $dateTo] as $key => $value) {
+            $dateObj = \DateTime::createFromFormat('Y-m-d', $value);
+
+            if (!$dateObj || $dateObj->format('Y-m-d') !== $value) {
+                throw new \InvalidArgumentException("{$key} must be a valid date in YYYY-MM-DD format");
+            }
+        }
+
+        if ($dateFrom > $dateTo) {
+            throw new \InvalidArgumentException('date_from cannot exceed date_to');
+        }
+    }
+
     #[Route('/events', name: 'events', methods: ['GET'])]
     #[OA\Get(
         path: '/api/events',
         summary: 'List events',
-        description: 'Returns events as GeoJSON'
+        description: 'Returns events as a GeoJSON FeatureCollection'
     )]
     #[OA\Parameter(
         name: 'bbox',
@@ -68,7 +130,7 @@ class EventsController extends AbstractController
     )]
     #[OA\Response(
         response: 200,
-        description: 'GeoJSON FeatureCollection with metadata',
+        description: 'GeoJSON FeatureCollection',
         content: new OA\JsonContent(
             properties: [
                 new OA\Property(property: 'type', type: 'string', example: 'FeatureCollection'),
@@ -139,96 +201,23 @@ class EventsController extends AbstractController
     #[RequireAuth]
     public function getEvents(
         #[MapQueryParameter] string $bbox,
-        #[MapQueryParameter] string $date_from,
-        #[MapQueryParameter] string $date_to,
+        #[MapQueryParameter('date_from')] string $dateFrom,
+        #[MapQueryParameter('date_to')] string $dateTo,
         #[MapQueryParameter] ?array $type,
         #[MapQueryParameter] int $limit = 2500
     ): JsonResponse {
-        // Parse bbox (format: minLon,minLat,maxLon,maxLat)
-        $bbox = explode(',', $bbox);
-
-        if (count($bbox) !== 4) {
-            return $this->json([
-                'error' => 'invalid_bbox',
-                'message' => 'bbox must be in format: minLon,minLat,maxLon,maxLat'
-            ], 400);
+        try {
+            $this->validateDates($dateFrom, $dateTo);
+            $bbox = $this->parseBbox($bbox);
+        } catch (\InvalidArgumentException $e) {
+            return $this->json(['error' => 'validation_error', 'message' => $e->getMessage()], 400);
         }
 
-        // Validate bbox coordinates are valid numbers
-        foreach ($bbox as $coord) {
-            if (!is_numeric($coord)) {
-                return $this->json([
-                    'error' => 'invalid_bbox',
-                    'message' => 'bbox coordinates must be valid numbers'
-                ], 400);
-            }
-        }
-
-        $bbox = array_map('floatval', $bbox);
-        [$minLon, $minLat, $maxLon, $maxLat] = $bbox;
-
-        // Validate coordinate ranges
-        if ($minLon < -180 || $minLon > 180 || $maxLon < -180 || $maxLon > 180) {
-            return $this->json([
-                'error' => 'invalid_bbox',
-                'message' => 'longitude must be between -180 and 180'
-            ], 400);
-        }
-
-        if ($minLat < -90 || $minLat > 90 || $maxLat < -90 || $maxLat > 90) {
-            return $this->json([
-                'error' => 'invalid_bbox',
-                'message' => 'latitude must be between -90 and 90'
-            ], 400);
-        }
-
-        if ($minLon >= $maxLon) {
-            return $this->json([
-                'error' => 'invalid_bbox',
-                'message' => 'minLon must be less than maxLon'
-            ], 400);
-        }
-
-        if ($minLat >= $maxLat) {
-            return $this->json([
-                'error' => 'invalid_bbox',
-                'message' => 'minLat must be less than maxLat'
-            ], 400);
-        }
-
-        // Validate date parameters
-        $dates = ['date_from' => $date_from, 'date_to' => $date_to];
-        foreach ($dates as $key => $value) {
-            $dateObj = \DateTime::createFromFormat('Y-m-d', $value);
-
-            if (!$dateObj || $dateObj->format('Y-m-d') !== $value) {
-                return $this->json([
-                    'error' => 'invalid_date',
-                    'message' => "{$key} must be a valid date in YYYY-MM-DD format"
-                ], 400);
-            }
-        }
-
-        if ($date_from > $date_to) {
-            return $this->json([
-                'error' => 'invalid_date_range',
-                'message' => 'date_from cannot exceed date_to'
-            ], 400);
-        }
-
-        $filters = [
-            'bbox' => $bbox,
-            'date_from' => $date_from,
-            'date_to' => $date_to
-        ];
-
-        if ($type && ($type = array_values(array_filter($type)))) {
-            $filters['types'] = $type;
-        }
+        $types = $type ? array_values(array_filter($type)) : [];
 
         // Sanitize limit parameter (clamped: 1-5000)
         $limit = max(1, min(5000, $limit));
-        $events = $this->eventRepository->find($filters, $limit + 1);
+        $events = $this->eventRepository->findEvents($bbox, $dateFrom, $dateTo, $types, $limit + 1);
         $isTruncated = count($events) > $limit;
         if ($isTruncated) {
             $events = array_slice($events, 0, $limit);

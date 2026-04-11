@@ -2,19 +2,19 @@
 
 namespace App\Repository;
 
+use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
 
 class EventRepository
 {
     /**
-     * Canonical ACLED event type and sub-event type ordering.
-     *
-     * Source: ACLED Codebook, Table 2 — "ACLED Events"
-     * @see https://acleddata.com/methodology/acled-codebook#acled-events-2
+     * Canonical ACLED event type and sub-event type ordering
      *
      * This order reflects the ACLED severity hierarchy: when multiple tactics
      * occur simultaneously at the same location and time, the higher-ranked
      * event type subsumes lower ones to avoid double-counting.
+     *
+     * @see https://acleddata.com/methodology/acled-codebook#acled-events-2
      */
     private const TYPE_ORDER = [
         'Battles' => ['Government regains territory', 'Non-state actor overtakes territory', 'Armed clash'],
@@ -30,14 +30,24 @@ class EventRepository
     ) {}
 
     /**
-     * Find events
+     * Find events matching the given filters, ordered by date descending
      *
-     * @param array $filters Array
+     * @param array $bbox [minLon, minLat, maxLon, maxLat]
+     * @param string $dateFrom Start date (YYYY-MM-DD)
+     * @param string $dateTo End date (YYYY-MM-DD)
+     * @param array $types Event types to include (empty = all)
      * @param int $limit Maximum number of results
      * @return array Array of events with geometry as GeoJSON
      */
-    public function find(array $filters = [], int $limit = 2500): array
-    {
+    public function findEvents(
+        array $bbox,
+        string $dateFrom,
+        string $dateTo,
+        array $types = [],
+        int $limit = 2500
+    ): array {
+        [$minLon, $minLat, $maxLon, $maxLat] = $bbox;
+
         $qb = $this->connection->createQueryBuilder();
 
         $qb->select(
@@ -72,31 +82,20 @@ class EventRepository
             'notes',
             'tags'
         )
-            ->from('events');
+            ->from('events')
+            ->andWhere('geom && ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)')
+            ->andWhere('date >= :date_from')
+            ->andWhere('date <= :date_to')
+            ->setParameter('minLon', $minLon)
+            ->setParameter('minLat', $minLat)
+            ->setParameter('maxLon', $maxLon)
+            ->setParameter('maxLat', $maxLat)
+            ->setParameter('date_from', $dateFrom)
+            ->setParameter('date_to', $dateTo);
 
-        // Apply filters
-        if (isset($filters['bbox'])) {
-            [$minLon, $minLat, $maxLon, $maxLat] = $filters['bbox'];
-            $qb->andWhere('geom && ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)')
-                ->setParameter('minLon', $minLon)
-                ->setParameter('minLat', $minLat)
-                ->setParameter('maxLon', $maxLon)
-                ->setParameter('maxLat', $maxLat);
-        }
-
-        if (isset($filters['date_from'])) {
-            $qb->andWhere('date >= :date_from')
-                ->setParameter('date_from', $filters['date_from']);
-        }
-
-        if (isset($filters['date_to'])) {
-            $qb->andWhere('date <= :date_to')
-                ->setParameter('date_to', $filters['date_to']);
-        }
-
-        if (isset($filters['types'])) {
+        if (!empty($types)) {
             $qb->andWhere($qb->expr()->in('type', ':types'))
-                ->setParameter('types', $filters['types'], \Doctrine\DBAL\ArrayParameterType::STRING);
+                ->setParameter('types', $types, ArrayParameterType::STRING);
         }
 
         $qb->orderBy('date', 'DESC')
