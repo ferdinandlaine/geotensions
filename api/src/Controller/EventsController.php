@@ -105,22 +105,18 @@ class EventsController extends AbstractController
         schema: new OA\Schema(type: 'string', format: 'date', example: '2024-01-27')
     )]
     #[OA\Parameter(
-        name: 'type[]',
-        description: 'Event type',
+        name: 'types',
+        description: 'Comma-separated event types or sub-types to filter by',
         in: 'query',
         required: false,
-        schema: new OA\Schema(
-            type: 'array',
-            items: new OA\Items(type: 'string'),
-        ),
-        example: ['Protests', 'Riots']
+        schema: new OA\Schema(type: 'string', example: 'Battles,Air/drone+strike')
     )]
     #[OA\Parameter(
         name: 'limit',
         description: 'Maximum number of events',
         in: 'query',
         required: false,
-        schema: new OA\Schema(type: 'integer', default: 2500, minimum: 1, maximum: 5000, example: 2500)
+        schema: new OA\Schema(type: 'integer', default: 2500, minimum: 1, maximum: 20000, example: 5000)
     )]
     #[OA\Response(
         response: 200,
@@ -169,8 +165,6 @@ class EventsController extends AbstractController
                                     new OA\Property(property: 'admin2', type: 'string', nullable: true, example: 'Vaucluse'),
                                     new OA\Property(property: 'admin3', type: 'string', nullable: true, example: 'Carpentras'),
                                     new OA\Property(property: 'location', type: 'string', example: 'Piolenc'),
-                                    new OA\Property(property: 'latitude', type: 'number', format: 'double', example: 44.1776),
-                                    new OA\Property(property: 'longitude', type: 'number', format: 'double', example: 4.7615),
                                     new OA\Property(property: 'geo_precision', type: 'integer', example: 1),
                                     new OA\Property(property: 'civilian_targeting', type: 'boolean', example: true),
                                     new OA\Property(property: 'fatalities', type: 'integer', example: 0),
@@ -195,7 +189,7 @@ class EventsController extends AbstractController
         #[MapQueryParameter] string $bbox,
         #[MapQueryParameter('date_from')] string $dateFrom,
         #[MapQueryParameter('date_to')] string $dateTo,
-        #[MapQueryParameter] ?array $type,
+        #[MapQueryParameter] ?string $types,
         #[MapQueryParameter] int $limit = 2500
     ): JsonResponse {
         try {
@@ -205,26 +199,22 @@ class EventsController extends AbstractController
             return $this->json(['error' => 'validation_error', 'message' => $e->getMessage()], 400);
         }
 
-        $types = $type ? array_values(array_filter($type)) : [];
+        if ($types !== null) $types = array_values(array_filter(explode(',', $types)));
 
-        // Sanitize limit parameter (clamped: 1-5000)
-        $limit = max(1, min(5000, $limit));
+        $limit = max(1, min(20000, $limit));
         $events = $this->eventRepository->findEvents($bbox, $dateFrom, $dateTo, $types, $limit + 1);
+
         $isTruncated = count($events) > $limit;
         if ($isTruncated) {
             $events = array_slice($events, 0, $limit);
         }
 
-        // Transform to GeoJSON format
         $features = [];
         foreach ($events as $event) {
             $geometry = json_decode($event['geom'], true);
-
-            // Extract acled_id for Feature ID
             $acledId = $event['acled_id'];
 
-            // Remove from properties to avoid duplication
-            unset($event['geom'], $event['acled_id'], $event['id']);
+            unset($event['acled_id'], $event['geom']);
 
             $features[] = [
                 'type' => 'Feature',

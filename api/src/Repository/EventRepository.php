@@ -7,8 +7,36 @@ use Doctrine\DBAL\Connection;
 
 class EventRepository
 {
+    private const FIELDS_ALLOWLIST = [
+        'date',
+        'type',
+        'sub_type',
+        'disorder_type',
+        'actor1',
+        'actor2',
+        'inter1',
+        'inter2',
+        'assoc_actor_1',
+        'assoc_actor_2',
+        'interaction',
+        'iso',
+        'region',
+        'country',
+        'admin1',
+        'admin2',
+        'admin3',
+        'location',
+        'geo_precision',
+        'civilian_targeting',
+        'fatalities',
+        'source',
+        'source_scale',
+        'notes',
+        'tags',
+    ];
+
     /**
-     * Canonical ACLED event type and sub-event type ordering
+     * Canonical ACLED event types and sub-types
      *
      * This order reflects the ACLED severity hierarchy: when multiple tactics
      * occur simultaneously at the same location and time, the higher-ranked
@@ -16,7 +44,7 @@ class EventRepository
      *
      * @see https://acleddata.com/methodology/acled-codebook#acled-events-2
      */
-    private const TYPE_ORDER = [
+    private const TYPE_ALLOWLIST = [
         'Battles' => ['Government regains territory', 'Non-state actor overtakes territory', 'Armed clash'],
         'Protests' => ['Excessive force against protesters', 'Protest with intervention', 'Peaceful protest'],
         'Riots' => ['Violent demonstration', 'Mob violence'],
@@ -30,12 +58,15 @@ class EventRepository
     ) {}
 
     /**
-     * Find events matching the given filters, ordered by date descending
+     * Find events matching the given filters, with deterministic spatial sampling.
+     *
+     * ORDER BY sample_order produces a deterministic pseudo-random ordering,
+     * ensuring consistent results across identical queries.
      *
      * @param array $bbox [minLon, minLat, maxLon, maxLat]
      * @param string $dateFrom Start date (YYYY-MM-DD)
      * @param string $dateTo End date (YYYY-MM-DD)
-     * @param array $types Event types to include (empty = all)
+     * @param ?array $types Event types to filter by
      * @param int $limit Maximum number of results
      * @return array Array of events with geometry as GeoJSON
      */
@@ -43,47 +74,16 @@ class EventRepository
         array $bbox,
         string $dateFrom,
         string $dateTo,
-        array $types = [],
+        ?array $types,
         int $limit = 2500
     ): array {
-        [$minLon, $minLat, $maxLon, $maxLat] = $bbox;
-
         $qb = $this->connection->createQueryBuilder();
 
-        $qb->select(
-            'id',
-            'acled_id',
-            'date',
-            'type',
-            'sub_type',
-            'disorder_type',
-            'actor1',
-            'actor2',
-            'inter1',
-            'inter2',
-            'assoc_actor_1',
-            'assoc_actor_2',
-            'interaction',
-            'iso',
-            'region',
-            'country',
-            'admin1',
-            'admin2',
-            'admin3',
-            'location',
-            'latitude',
-            'longitude',
-            'geo_precision',
-            'ST_AsGeoJSON(geom) as geom',
-            'civilian_targeting',
-            'fatalities',
-            'source',
-            'source_scale',
-            'notes',
-            'tags'
-        )
+        [$minLon, $minLat, $maxLon, $maxLat] = $bbox;
+
+        $qb->select(...array_merge(['acled_id'], ['ST_AsGeoJSON(geom) as geom']))
             ->from('events')
-            ->andWhere('geom && ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)')
+            ->where('geom && ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)')
             ->andWhere('date >= :date_from')
             ->andWhere('date <= :date_to')
             ->setParameter('minLon', $minLon)
@@ -94,7 +94,7 @@ class EventRepository
             ->setParameter('date_to', $dateTo);
 
         if (!empty($types)) {
-            $typeKeys = array_keys(self::TYPE_ORDER);
+            $typeKeys = array_keys(self::TYPE_ALLOWLIST);
             $parentTypes = array_values(array_intersect($types, $typeKeys));
             $subTypes  = array_values(array_diff($types, $typeKeys));
 
@@ -110,8 +110,8 @@ class EventRepository
             $qb->andWhere($qb->expr()->or(...$conditions));
         }
 
-        $qb->orderBy('date', 'DESC')
-            ->addOrderBy('id', 'DESC')
+        $qb->orderBy('sample_order', 'ASC')
+            ->addOrderBy('id', 'ASC')
             ->setMaxResults($limit);
 
         $result = $qb->executeQuery();
@@ -139,8 +139,8 @@ class EventRepository
         }
 
         // Sort types and sub-types according to canonical ACLED hierarchy
-        $typeKeys = array_keys(self::TYPE_ORDER);
-        $subTypeIndex = array_map('array_flip', self::TYPE_ORDER);
+        $typeKeys = array_keys(self::TYPE_ALLOWLIST);
+        $subTypeIndex = array_map('array_flip', self::TYPE_ALLOWLIST);
 
         uksort(
             $types,
