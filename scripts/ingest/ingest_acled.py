@@ -236,21 +236,15 @@ def insert_events(conn, df):
             INSERT INTO events (
                 acled_id, date, type, sub_type, disorder_type,
                 actor1, actor2, inter1, inter2, assoc_actor_1, assoc_actor_2, interaction,
-                iso, region, country, admin1, admin2, admin3, location,
-                latitude, longitude, geo_precision, geom,
-                civilian_targeting, fatalities,
-                source, source_scale, notes, tags,
-                timestamp
+                iso, region, country, admin1, admin2, admin3, location, geo_precision, geom,
+                civilian_targeting, fatalities, source, source_scale, notes, tags, timestamp
             )
             SELECT
                 acled_id, date, type, sub_type, disorder_type,
                 actor1, actor2, inter1, inter2, assoc_actor_1, assoc_actor_2, interaction,
                 iso, region, country, admin1, admin2, admin3, location,
-                latitude, longitude, geo_precision,
-                ST_SetSRID(ST_MakePoint(longitude, latitude), 4326),
-                civilian_targeting, fatalities,
-                source, source_scale, notes, tags,
-                timestamp
+                geo_precision, ST_SetSRID(ST_MakePoint(longitude, latitude), 4326),
+                civilian_targeting, fatalities, source, source_scale, notes, tags, timestamp
             FROM _staging
             ON CONFLICT (acled_id) DO UPDATE SET
                 date = EXCLUDED.date,
@@ -271,8 +265,6 @@ def insert_events(conn, df):
                 admin2 = EXCLUDED.admin2,
                 admin3 = EXCLUDED.admin3,
                 location = EXCLUDED.location,
-                latitude = EXCLUDED.latitude,
-                longitude = EXCLUDED.longitude,
                 geo_precision = EXCLUDED.geo_precision,
                 geom = EXCLUDED.geom,
                 civilian_targeting = EXCLUDED.civilian_targeting,

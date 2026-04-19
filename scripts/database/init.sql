@@ -25,8 +25,6 @@ CREATE TABLE events (
     admin2 VARCHAR(255),
     admin3 VARCHAR(255),
     location VARCHAR(255) NOT NULL,
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
     geo_precision SMALLINT NOT NULL CHECK (geo_precision BETWEEN 1 AND 3),
 
     -- PostGIS geometry
@@ -40,20 +38,19 @@ CREATE TABLE events (
     notes TEXT NOT NULL,
     tags TEXT,
 
+    -- Deterministic pseudo-random order for stable sampling across queries
+    sample_order INT GENERATED ALWAYS AS (hashtext(acled_id)) STORED,
+
     -- Audit trail
     timestamp BIGINT NOT NULL, -- Last modified by ACLED
     imported_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Spatial index (essential for map queries)
-CREATE INDEX events_geom_idx ON events USING GIST(geom);
+CREATE EXTENSION IF NOT EXISTS btree_gist;
 
--- Composite index for date-ordered queries (supports ORDER BY date DESC, id DESC)
-CREATE INDEX events_date_id_idx ON events(date DESC, id DESC);
-
--- Event type index (for filtering by event type)
-CREATE INDEX events_type_idx ON events(type);
+CREATE INDEX events_geom_date_sample_idx 
+  ON events USING GIST(geom, date, sample_order);
 
 -- Authentication
 CREATE TABLE users (
@@ -70,5 +67,3 @@ CREATE TABLE auth_tokens (
     expires_at TIMESTAMPTZ NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-
-CREATE INDEX auth_tokens_token_idx ON auth_tokens(token);
