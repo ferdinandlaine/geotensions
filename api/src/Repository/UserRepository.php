@@ -31,7 +31,7 @@ class UserRepository
                 'username' => ':username',
                 'password_hash' => ':password_hash',
             ])
-            ->setParameter('username', $username)
+            ->setParameter('username', trim(strtolower($username)))
             ->setParameter('password_hash', password_hash($password, PASSWORD_BCRYPT))
             ->executeStatement();
 

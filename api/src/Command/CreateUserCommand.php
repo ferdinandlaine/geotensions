@@ -24,14 +24,11 @@ class CreateUserCommand
         OutputInterface $output
     ): int {
         try {
-            $username = trim(strtolower($username));
             $id = $this->userRepository->createUser($username, $password);
             $output->writeln("User <info>{$username}</info> created (id: {$id})");
-
             return Command::SUCCESS;
         } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException $e) {
             $output->writeln("<error>Username '{$username}' already exists</error>");
-            
             return Command::FAILURE;
         }
     }
