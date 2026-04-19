@@ -112,6 +112,13 @@ class EventsController extends AbstractController
         schema: new OA\Schema(type: 'string', example: 'Battles,Air/drone+strike')
     )]
     #[OA\Parameter(
+        name: 'fields',
+        description: 'Comma-separated fields to include in properties (empty = geometry only)',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', example: 'date,notes,source')
+    )]
+    #[OA\Parameter(
         name: 'limit',
         description: 'Maximum number of events',
         in: 'query',
@@ -190,6 +197,7 @@ class EventsController extends AbstractController
         #[MapQueryParameter('date_from')] string $dateFrom,
         #[MapQueryParameter('date_to')] string $dateTo,
         #[MapQueryParameter] ?string $types,
+        #[MapQueryParameter] ?string $fields,
         #[MapQueryParameter] int $limit = 2500
     ): JsonResponse {
         try {
@@ -200,10 +208,9 @@ class EventsController extends AbstractController
         }
 
         if ($types !== null) $types = array_values(array_filter(explode(',', $types)));
-
+        if ($fields !== null) $fields = array_values(array_filter(explode(',', $fields)));
         $limit = max(1, min(20000, $limit));
-        $events = $this->eventRepository->findEvents($bbox, $dateFrom, $dateTo, $types, $limit + 1);
-
+        $events = $this->eventRepository->findEvents($bbox, $dateFrom, $dateTo, $types, $fields, $limit + 1);
         $isTruncated = count($events) > $limit;
         if ($isTruncated) {
             $events = array_slice($events, 0, $limit);
@@ -220,7 +227,7 @@ class EventsController extends AbstractController
                 'type' => 'Feature',
                 'id' => $acledId,
                 'geometry' => $geometry,
-                'properties' => $event
+                'properties' => (object) $event
             ];
         }
 

@@ -67,6 +67,7 @@ class EventRepository
      * @param string $dateFrom Start date (YYYY-MM-DD)
      * @param string $dateTo End date (YYYY-MM-DD)
      * @param ?array $types Event types to filter by
+     * @param ?array $fields Fields to include in properties
      * @param int $limit Maximum number of results
      * @return array Array of events with geometry as GeoJSON
      */
@@ -75,13 +76,17 @@ class EventRepository
         string $dateFrom,
         string $dateTo,
         ?array $types,
+        ?array $fields,
         int $limit = 2500
     ): array {
         $qb = $this->connection->createQueryBuilder();
 
         [$minLon, $minLat, $maxLon, $maxLat] = $bbox;
+        $fields = $fields !== null
+            ? array_values(array_intersect(self::FIELDS_ALLOWLIST, $fields))
+            : self::FIELDS_ALLOWLIST;
 
-        $qb->select(...array_merge(['acled_id'], ['ST_AsGeoJSON(geom) as geom']))
+        $qb->select(...array_merge(['acled_id'], ['ST_AsGeoJSON(geom) as geom'], $fields))
             ->from('events')
             ->where('geom && ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)')
             ->andWhere('date >= :date_from')
