@@ -25,7 +25,7 @@ logging.basicConfig(
     datefmt="%a %b %d %H:%M:%S UTC %Y",
 )
 
-logger = logging.getLogger("ingest_acled")
+logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 DATA_DIR = Path(os.getenv("DATA_DIR")) if os.getenv("DATA_DIR") else Path("/data")
@@ -71,7 +71,6 @@ COLUMN_MAPPING = {
 def connect_db():
     """Create and return a PostgreSQL database connection."""
     conn = psycopg.connect(DATABASE_URL)
-    logger.info("Connected to database")
     return conn
 
 
@@ -343,7 +342,7 @@ def main():
         finally:
             conn.close()
     else:
-        csv_files = list(DATA_DIR.glob("*.csv"))
+        csv_files = sorted(DATA_DIR.glob("*.csv"))
 
         if not csv_files:
             logger.debug(f"No CSV files found in {DATA_DIR}")
