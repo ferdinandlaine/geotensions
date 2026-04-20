@@ -2,35 +2,37 @@
 
 namespace App\EventListener;
 
-use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-class ExceptionListener implements EventSubscriberInterface
+#[AsEventListener(event: KernelEvents::EXCEPTION)]
+class ExceptionListener
 {
-    public static function getSubscribedEvents(): array
-    {
-        return [KernelEvents::EXCEPTION => 'onKernelException'];
-    }
-
-    public function onKernelException(ExceptionEvent $event): void
+    public function __invoke(ExceptionEvent $event): void
     {
         $request = $event->getRequest();
-
-        if ($request->getPathInfo() === '/') {
-            return;
-        }
+        if (!str_starts_with($request->getPathInfo(), '/api/')) return;
 
         $exception = $event->getThrowable();
-        $statusCode = $exception instanceof HttpExceptionInterface
-            ? $exception->getStatusCode()
-            : 500;
+        if ($exception instanceof HttpExceptionInterface) {
+            $statusCode = $exception->getStatusCode();
+            $headers = $exception->getHeaders();
+        } else {
+            $statusCode = 500;
+            $headers = [];
+        }
 
-        $event->setResponse(new Response(
-            $statusCode . ' ' . Response::$statusTexts[$statusCode],
-            $statusCode
+        $event->setResponse(new JsonResponse(
+            [
+                'status' => $statusCode,
+                'message' => Response::$statusTexts[$statusCode],
+            ],
+            $statusCode,
+            $headers
         ));
     }
 }
