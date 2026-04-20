@@ -1,4 +1,6 @@
+/* eslint-disable react-refresh/only-export-components */
 import { cva, type VariantProps } from 'class-variance-authority'
+import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -23,7 +25,7 @@ function ButtonGroup({
   className,
   orientation,
   ...props
-}: React.ComponentProps<'div'> & VariantProps<typeof buttonGroupVariants>) {
+}: ComponentProps<'div'> & VariantProps<typeof buttonGroupVariants>) {
   return (
     <div
       role="group"
