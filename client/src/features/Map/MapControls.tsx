@@ -7,11 +7,11 @@ import { useMap } from '@/contexts/MapContext'
 import { useZoomConstraints } from './useZoomConstraints'
 
 function MapControls() {
-  const { mapRef } = useMap()
+  const { map } = useMap()
   const { canZoomIn, canZoomOut } = useZoomConstraints()
 
-  const zoomIn = () => mapRef.current?.getMap()?.zoomIn()
-  const zoomOut = () => mapRef.current?.getMap()?.zoomOut()
+  const zoomIn = () => map?.zoomIn()
+  const zoomOut = () => map?.zoomOut()
 
   return (
     <ButtonGroup orientation="vertical" aria-label="Map controls">

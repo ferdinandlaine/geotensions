@@ -1,21 +1,19 @@
 /* eslint-disable react-refresh/only-export-components */
-import { LngLatBounds } from 'maplibre-gl'
+import { LngLatBounds, Map as MapLibreMap } from 'maplibre-gl'
 import {
   createContext,
   type PropsWithChildren,
-  type RefObject,
+  useCallback,
   useContext,
-  useRef,
+  useEffect,
   useState,
 } from 'react'
-import type { MapRef } from 'react-map-gl/maplibre'
 
 interface MapContextValue {
-  mapRef: RefObject<MapRef | null>
+  map: MapLibreMap | null
   bounds: LngLatBounds | null
   zoom: number | null
-  setBounds: (bounds: LngLatBounds) => void
-  setZoom: (zoom: number) => void
+  registerMap: (map: MapLibreMap) => void
 }
 
 const MapContext = createContext<MapContextValue | null>(null)
@@ -31,14 +29,31 @@ function useMap() {
 }
 
 function MapProvider({ children }: PropsWithChildren) {
-  const mapRef = useRef<MapRef>(null)
+  const [map, setMap] = useState<MapLibreMap | null>(null)
   const [bounds, setBounds] = useState<LngLatBounds | null>(null)
   const [zoom, setZoom] = useState<number | null>(null)
 
+  const registerMap = useCallback((m: MapLibreMap) => setMap(m), [])
+
+  useEffect(() => {
+    if (!map) return
+
+    const sync = () => {
+      setBounds(map.getBounds())
+      setZoom(map.getZoom())
+    }
+
+    map.once('load', sync)
+    map.on('moveend', sync)
+
+    return () => {
+      map.off('load', sync)
+      map.off('moveend', sync)
+    }
+  }, [map])
+
   return (
-    <MapContext.Provider value={{ mapRef, bounds, zoom, setBounds, setZoom }}>
-      {children}
-    </MapContext.Provider>
+    <MapContext.Provider value={{ map, bounds, zoom, registerMap }}>{children}</MapContext.Provider>
   )
 }
 

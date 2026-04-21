@@ -1,6 +1,12 @@
 import { LngLatBounds, MercatorCoordinate } from 'maplibre-gl'
-import { useRef, useState } from 'react'
-import { Layer, Map, type MapRef, Source, type StyleSpecification } from 'react-map-gl/maplibre'
+import { useEffect, useRef, useState } from 'react'
+import {
+  Layer,
+  Map as ReactMapGL,
+  type MapRef,
+  Source,
+  type StyleSpecification,
+} from 'react-map-gl/maplibre'
 
 import minimap from '@/assets/map-styles/minimap.json'
 import { MAP_CONFIG } from '@/config/map'
@@ -23,11 +29,25 @@ const MINIMAP_HEIGHT_PX = MINIMAP_WIDTH_PX / aspectRatio
 const RECTANGLE_MIN_PX = 4 // threshold below which rectangle switches to point
 
 function Minimap() {
-  const { mapRef, bounds } = useMap()
+  const { map, bounds: mapBounds } = useMap()
   const { canZoomIn, canZoomOut } = useZoomConstraints()
   const containerRef = useRef<HTMLDivElement>(null)
   const minimapRef = useRef<MapRef>(null)
-  const [mapReady, setMapReady] = useState(false)
+  // MapContext only emits on `moveend`; subscribe to `move` locally so the
+  // viewport rectangle tracks smoothly during pans and zooms.
+  const [liveBounds, setLiveBounds] = useState<LngLatBounds | null>(mapBounds)
+  const bounds = liveBounds ?? mapBounds
+
+  useEffect(() => {
+    if (!map) return
+
+    const handleMove = () => setLiveBounds(map.getBounds())
+    map.on('move', handleMove)
+
+    return () => {
+      map.off('move', handleMove)
+    }
+  }, [map])
 
   const handleMapLoad = () => {
     const minimap = minimapRef.current?.getMap()
@@ -37,24 +57,26 @@ function Minimap() {
       animate: false,
       padding: -1,
     })
-
-    setMapReady(true)
-  }
-
-  const handleDragStart = (event: DragEvent) => {
-    const map = mapRef.current?.getMap()
-    const lngLat = minimapRef.current?.getMap()?.unproject([event.x, event.y])
-    if (!map || !lngLat) return
-
-    map.stop().easeTo({ center: [lngLat.lng, lngLat.lat] })
   }
 
   const handleDrag = (event: DragEvent) => {
-    const map = mapRef.current?.getMap()
+    if (!map) return
     const lngLat = minimapRef.current?.getMap()?.unproject([event.x, event.y])
-    if (!map || !lngLat) return
-
+    if (!lngLat) return
     map.stop().setCenter([lngLat.lng, lngLat.lat])
+  }
+
+  const handleDragStart = (event: DragEvent) => {
+    if (!map) return
+    const lngLat = minimapRef.current?.getMap()?.unproject([event.x, event.y])
+    if (!lngLat) return
+    map.stop().easeTo({ center: [lngLat.lng, lngLat.lat] })
+  }
+
+  const handleZoom = (delta: number) => {
+    if (!map) return
+
+    map.setZoom(map.getZoom() + delta * 0.05)
   }
 
   useDrag(
@@ -65,13 +87,6 @@ function Minimap() {
     },
     { threshold: 5 }
   )
-
-  const handleZoom = (delta: number) => {
-    const map = mapRef.current?.getMap()
-    if (!map) return
-
-    map.setZoom(map.getZoom() + delta * 0.05)
-  }
 
   useWheel(
     containerRef,
@@ -129,7 +144,7 @@ function Minimap() {
       className="bg-background w-48 cursor-grab overflow-hidden rounded-md border active:cursor-grabbing"
       style={{ aspectRatio, touchAction: 'none' }}
     >
-      <Map
+      <ReactMapGL
         ref={minimapRef}
         mapStyle={minimap as unknown as StyleSpecification}
         interactive={false}
@@ -137,39 +152,35 @@ function Minimap() {
         attributionControl={false}
         onLoad={handleMapLoad}
       >
-        {mapReady && (
-          <>
-            {rectangleData && (
-              <Source id="viewport-bounds" type="geojson" data={rectangleData}>
-                <Layer
-                  id="viewport-fill"
-                  type="fill"
-                  paint={{ 'fill-color': 'rgba(255, 255, 255, 0.1)' }}
-                  layout={{ visibility: showAsRect ? 'visible' : 'none' }}
-                />
+        {rectangleData && (
+          <Source id="viewport-bounds" type="geojson" data={rectangleData}>
+            <Layer
+              id="viewport-fill"
+              type="fill"
+              paint={{ 'fill-color': 'rgba(255, 255, 255, 0.1)' }}
+              layout={{ visibility: showAsRect ? 'visible' : 'none' }}
+            />
 
-                <Layer
-                  id="viewport-outline"
-                  type="line"
-                  paint={{ 'line-color': 'rgba(255, 255, 255, 0.25)', 'line-width': 1 }}
-                  layout={{ visibility: showAsRect ? 'visible' : 'none' }}
-                />
-              </Source>
-            )}
-
-            {pointData && (
-              <Source id="viewport-point" type="geojson" data={pointData}>
-                <Layer
-                  id="viewport-point"
-                  type="circle"
-                  paint={{ 'circle-color': 'rgba(255, 255, 255, 0.35)', 'circle-radius': 3 }}
-                  layout={{ visibility: showAsRect ? 'none' : 'visible' }}
-                />
-              </Source>
-            )}
-          </>
+            <Layer
+              id="viewport-outline"
+              type="line"
+              paint={{ 'line-color': 'rgba(255, 255, 255, 0.25)', 'line-width': 1 }}
+              layout={{ visibility: showAsRect ? 'visible' : 'none' }}
+            />
+          </Source>
         )}
-      </Map>
+
+        {pointData && (
+          <Source id="viewport-point" type="geojson" data={pointData}>
+            <Layer
+              id="viewport-point"
+              type="circle"
+              paint={{ 'circle-color': 'rgba(255, 255, 255, 0.35)', 'circle-radius': 3 }}
+              layout={{ visibility: showAsRect ? 'none' : 'visible' }}
+            />
+          </Source>
+        )}
+      </ReactMapGL>
     </div>
   )
 }
