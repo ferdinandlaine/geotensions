@@ -258,7 +258,7 @@ const Sidebar = forwardRef<
         >
           <div
             data-sidebar="sidebar"
-            className="bg-background/75 group-data-[variant=floating]:border-sidebar-border pointer-events-auto flex h-fit max-h-full w-full flex-col backdrop-blur-xs group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow"
+            className="bg-background/75 group-data-[variant=floating]:border-sidebar-border pointer-events-auto flex h-fit max-h-full w-full flex-col backdrop-blur-2xl group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow"
           >
             {children}
           </div>

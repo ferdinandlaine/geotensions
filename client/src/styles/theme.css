@@ -40,6 +40,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  --timebrush-color: oklch(0.6 0.2 260);
   --animate-progress: progress-slide 1.4s ease-in-out infinite;
 
   @keyframes progress-slide {
@@ -119,7 +120,4 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-
-  /* Custom components */
-  --timebrush-color: oklch(0.6 0.2 260);
 }

@@ -24,11 +24,11 @@ function App() {
             <Map>
               <EventsLayer />
             </Map>
-          </main>
 
-          <div className="fixed inset-x-8 bottom-8">
-            <TimeBrush className="mx-auto max-w-4xl" />
-          </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-linear-to-b from-transparent to-black px-8 pb-12 before:absolute before:inset-0 before:mask-[linear-gradient(to_bottom,transparent,black)] before:backdrop-blur-xs">
+              <TimeBrush className="pointer-events-auto mx-auto max-w-4xl" />
+            </div>
+          </main>
 
           <div className="fixed top-4 right-4 flex gap-2">
             {hasFinePointer && <MapControls />}
