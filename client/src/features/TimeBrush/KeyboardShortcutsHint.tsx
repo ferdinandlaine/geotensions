@@ -24,77 +24,84 @@ export function KeyboardShortcutsHint() {
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent side="right" sideOffset={16} align="end" className="w-fit">
+      <PopoverContent side="left" sideOffset={16} align="end" className="text-sm md:w-fit">
         <PopoverHeader className="mb-4">
-          <PopoverTitle className="text-lg">Shortcuts</PopoverTitle>
+          <PopoverTitle className="text-lg">Keyboard shortcuts</PopoverTitle>
           <PopoverDescription>
-            <Kbd>⇥ Tab</Kbd> into the timeline, then use shortcuts below
+            Jump to the timeline with <Kbd>⇥ Tab</Kbd>, back to the map with <Kbd>⇧ Shift</Kbd> +{' '}
+            <Kbd>⇥ Tab</Kbd>
           </PopoverDescription>
         </PopoverHeader>
 
-        <div className="text-muted-foreground space-y-4 text-sm">
-          <div>
-            <p className="mb-1.5 text-xs font-medium tracking-wide uppercase">Selection</p>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-4">
+            <p className="text-muted-foreground mb-1.5 font-semibold tracking-wide uppercase">
+              Selection
+            </p>
 
             <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
               <KbdGroup>
-                <Kbd>&larr;</Kbd>
-                <Kbd>&rarr;</Kbd>
+                <Kbd>←</Kbd>
+                <Kbd>→</Kbd>
               </KbdGroup>
               <span>Move by 1 day</span>
 
               <KbdGroup>
-                <Kbd>&uarr;</Kbd>
-                <Kbd>&darr;</Kbd>
+                <Kbd>↑</Kbd>
+                <Kbd>↓</Kbd>
               </KbdGroup>
               <span>Extend / shorten by 1 day</span>
 
-              <KbdGroup>
-                <Kbd>⇧ Shift</Kbd> + <Kbd>&larr;</Kbd>
-                <Kbd>&rarr;</Kbd>
+              <KbdGroup className="text-muted-foreground">
+                <Kbd>⇧ Shift</Kbd> + <Kbd>←</Kbd>
+                <Kbd>→</Kbd>
               </KbdGroup>
               <span>Move by selection</span>
 
-              <KbdGroup>
-                <Kbd>⇧ Shift</Kbd> + <Kbd>&uarr;</Kbd>
-                <Kbd>&darr;</Kbd>
+              <KbdGroup className="text-muted-foreground">
+                <Kbd>⇧ Shift</Kbd> + <Kbd>↑</Kbd>
+                <Kbd>↓</Kbd>
               </KbdGroup>
               <span>Resize by week</span>
             </div>
           </div>
 
-          <div>
-            <p className="mb-1.5 text-xs font-medium tracking-wide uppercase">Viewport</p>
+          <div className="space-y-4">
+            <p className="text-muted-foreground mb-1.5 font-semibold tracking-wide uppercase">
+              Viewport
+            </p>
 
             <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
-              <KbdGroup>
-                <Kbd>{ALT}</Kbd> + <Kbd>&larr;</Kbd>
-                <Kbd>&rarr;</Kbd>
+              <KbdGroup className="text-muted-foreground">
+                <Kbd>{ALT}</Kbd> + <Kbd>←</Kbd>
+                <Kbd>→</Kbd>
               </KbdGroup>
               <span>Pan</span>
 
-              <KbdGroup>
-                <Kbd>{ALT}</Kbd> + <Kbd>&uarr;</Kbd>
-                <Kbd>&darr;</Kbd>
+              <KbdGroup className="text-muted-foreground">
+                <Kbd>{ALT}</Kbd> + <Kbd>↑</Kbd>
+                <Kbd>↓</Kbd>
               </KbdGroup>
               <span>Zoom in / out</span>
             </div>
 
-            <p className="mt-2 italic">
+            <p className="text-muted-foreground italic">
               Hold <Kbd>⇧ Shift</Kbd> for larger steps
             </p>
           </div>
 
-          <div>
-            <p className="mb-1.5 text-xs font-medium tracking-wide uppercase">Mouse</p>
+          <div className="space-y-4 md:col-span-2">
+            <p className="text-muted-foreground mb-1.5 font-semibold tracking-wide uppercase">
+              Mouse
+            </p>
 
             <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
-              <KbdGroup>
+              <KbdGroup className="text-muted-foreground">
                 <Kbd>{ALT}</Kbd> + <Kbd>drag</Kbd>
               </KbdGroup>
               <span>Center selection on date</span>
 
-              <KbdGroup>
+              <KbdGroup className="text-muted-foreground">
                 <Kbd>{META}</Kbd> + <Kbd>drag</Kbd>
               </KbdGroup>
               <span>Re-select</span>
