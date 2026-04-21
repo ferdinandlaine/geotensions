@@ -52,4 +52,12 @@ export type BBox = [west: number, south: number, east: number, north: number]
 export interface EventsQuery {
   bbox: BBox
   filters: EventFilters
+  /**
+   * Fields to include in event properties.
+   * - ['date', 'type'] → specific fields only
+   * - [] → geometry only, no properties
+   * - undefined → all fields
+   */
+  fields?: string[]
+  limit?: number
 }

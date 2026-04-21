@@ -13,7 +13,7 @@ export function getEventTypes() {
 }
 
 function toParams(query: EventsQuery): URLSearchParams {
-  const { bbox, filters } = query
+  const { bbox, filters, fields, limit } = query
 
   const params = new URLSearchParams({
     bbox: bbox.join(','),
@@ -22,6 +22,8 @@ function toParams(query: EventsQuery): URLSearchParams {
   })
 
   if (filters.types.length) params.set('types', filters.types.join(','))
+  if (fields) params.set('fields', fields.join(','))
+  if (limit) params.set('limit', String(limit))
 
   return params
 }
