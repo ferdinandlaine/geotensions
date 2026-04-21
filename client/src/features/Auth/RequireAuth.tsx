@@ -17,4 +17,4 @@ function RequireAuth({ children, flag = true }: PropsWithChildren<{ flag?: boole
   return children
 }
 
-export default RequireAuth
+export { RequireAuth }
