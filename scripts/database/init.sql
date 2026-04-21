@@ -15,7 +15,6 @@ CREATE TABLE events (
     inter2 TEXT,
     assoc_actor_1 TEXT,
     assoc_actor_2 TEXT,
-    interaction TEXT NOT NULL,
     
     -- Geographic
     iso SMALLINT NOT NULL CHECK (iso BETWEEN 0 AND 999),

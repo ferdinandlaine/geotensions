@@ -47,7 +47,6 @@ COLUMN_MAPPING = {
     "inter2": "inter2",
     "assoc_actor_1": "assoc_actor_1",
     "assoc_actor_2": "assoc_actor_2",
-    "interaction": "interaction",
     "iso": "iso",
     "region": "region",
     "country": "country",
@@ -166,7 +165,6 @@ def insert_events(conn, df):
         "inter2",
         "assoc_actor_1",
         "assoc_actor_2",
-        "interaction",
         "iso",
         "region",
         "country",
@@ -201,7 +199,6 @@ def insert_events(conn, df):
                 inter2 TEXT,
                 assoc_actor_1 TEXT,
                 assoc_actor_2 TEXT,
-                interaction TEXT,
                 iso INTEGER,
                 region TEXT,
                 country TEXT,
@@ -235,13 +232,13 @@ def insert_events(conn, df):
             """
             INSERT INTO events (
                 acled_id, date, type, sub_type, disorder_type,
-                actor1, actor2, inter1, inter2, assoc_actor_1, assoc_actor_2, interaction,
+                actor1, actor2, inter1, inter2, assoc_actor_1, assoc_actor_2,
                 iso, region, country, admin1, admin2, admin3, location, geo_precision, geom,
                 civilian_targeting, fatalities, source, source_scale, notes, tags, timestamp
             )
             SELECT
                 acled_id, date, type, sub_type, disorder_type,
-                actor1, actor2, inter1, inter2, assoc_actor_1, assoc_actor_2, interaction,
+                actor1, actor2, inter1, inter2, assoc_actor_1, assoc_actor_2,
                 iso, region, country, admin1, admin2, admin3, location,
                 geo_precision, ST_SetSRID(ST_MakePoint(longitude, latitude), 4326),
                 civilian_targeting, fatalities, source, source_scale, notes, tags, timestamp
@@ -257,7 +254,6 @@ def insert_events(conn, df):
                 inter2 = EXCLUDED.inter2,
                 assoc_actor_1 = EXCLUDED.assoc_actor_1,
                 assoc_actor_2 = EXCLUDED.assoc_actor_2,
-                interaction = EXCLUDED.interaction,
                 iso = EXCLUDED.iso,
                 region = EXCLUDED.region,
                 country = EXCLUDED.country,

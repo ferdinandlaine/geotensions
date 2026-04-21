@@ -8,9 +8,30 @@ export interface EventFeature {
     coordinates: [number, number]
   }
   properties: {
-    type: string
-    sub_type: string
-    date: string
+    date?: string
+    type?: string
+    sub_type?: string
+    disorder_type?: string
+    actor1?: string
+    actor2?: string
+    inter1?: string
+    inter2?: string
+    assoc_actor_1?: string
+    assoc_actor_2?: string
+    iso?: number
+    region?: string
+    country?: string
+    admin1?: string
+    admin2?: string
+    admin3?: string
+    location?: string
+    geo_precision?: number
+    civilian_targeting?: boolean
+    fatalities?: number
+    source?: string
+    source_scale?: string
+    notes?: string
+    tags?: string
   }
 }
 

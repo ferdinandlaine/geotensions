@@ -113,7 +113,7 @@ class EventsController extends AbstractController
     )]
     #[OA\Parameter(
         name: 'fields',
-        description: 'Comma-separated fields to include in properties (empty = geometry only)',
+        description: 'Comma-separated properties to include (empty = geometry only)',
         in: 'query',
         required: false,
         schema: new OA\Schema(type: 'string', example: 'date,notes,source')
@@ -164,7 +164,6 @@ class EventsController extends AbstractController
                                     new OA\Property(property: 'inter2', type: 'string', nullable: true, example: 'Rioters'),
                                     new OA\Property(property: 'assoc_actor_1', type: 'string', nullable: true, example: 'Farmers (France); FNSEA: National Federation of Farmers Unions; JA: Young Farmers'),
                                     new OA\Property(property: 'assoc_actor_2', type: 'string', nullable: true, example: 'Labor Group (France)'),
-                                    new OA\Property(property: 'interaction', type: 'string', example: 'Rioters-Protesters'),
                                     new OA\Property(property: 'iso', type: 'integer', example: 250),
                                     new OA\Property(property: 'region', type: 'string', example: 'Europe'),
                                     new OA\Property(property: 'country', type: 'string', example: 'France'),
@@ -178,8 +177,7 @@ class EventsController extends AbstractController
                                     new OA\Property(property: 'source', type: 'string', example: 'France 3 Regions'),
                                     new OA\Property(property: 'source_scale', type: 'string', example: 'National'),
                                     new OA\Property(property: 'notes', type: 'string', example: 'On 26 January 2024, in the morning, farmers set up a road blockade on the A7 highway in Piolenc (Provence-Alpes-Cote d\'Azur). The event was part of a nationwide farmers\' demonstration movement called by FNSEA and JA against rising production costs, stricter environmental norms restricting the use of pesticides, foreign imports, and bureaucratic constraints. One demonstrator was knocked down by a lorry attempting to break through the roadblock after the farmers blocking the road started to inspect the lorry\'s cargo, sustaining mild injuries to his wrist.'),
-                                    new OA\Property(property: 'tags', type: 'string', nullable: true, example: 'crowd size=no report'),
-                                    new OA\Property(property: 'timestamp', type: 'integer', example: 1712695337)
+                                    new OA\Property(property: 'tags', type: 'string', nullable: true, example: 'crowd size=no report')
                                 ],
                                 type: 'object'
                             )

@@ -18,7 +18,6 @@ class EventRepository
         'inter2',
         'assoc_actor_1',
         'assoc_actor_2',
-        'interaction',
         'iso',
         'region',
         'country',
