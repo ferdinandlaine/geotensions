@@ -7,15 +7,18 @@ import { Calendar } from '@/components/ui/calendar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from '@/components/ui/sidebar'
 import { TIME_CONFIG } from '@/config/time'
+import { useFilters } from '@/contexts/FiltersContext'
+import { isValidDateRange } from '@/types/filter'
 
 const { COVERAGE_START_DATE, COVERAGE_END_DATE } = TIME_CONFIG
 
-export interface DateRangeFilterProps {
-  value: DateRange
-  onChange: (range: DateRange | undefined) => void
-}
+function DateRangeFilter() {
+  const { dateRange: value, setDateRange } = useFilters()
 
-function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
+  const onChange = (range: DateRange | undefined) => {
+    if (isValidDateRange(range)) setDateRange(range)
+  }
+
   return (
     <Collapsible className="group/collapsible">
       <SidebarGroup className="px-2">

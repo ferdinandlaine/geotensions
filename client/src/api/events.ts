@@ -21,8 +21,7 @@ function toParams(query: EventsQuery): URLSearchParams {
     date_to: format(filters.dateRange.to, 'yyyy-MM-dd'),
   })
 
-  // Generate array parameters: ?type[]=Protests&type[]=Riots
-  filters.eventTypes.forEach((type) => params.append('type[]', type))
+  if (filters.types.length) params.set('types', filters.types.join(','))
 
   return params
 }

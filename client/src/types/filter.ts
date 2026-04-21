@@ -1,3 +1,5 @@
+import type { DateRange as RDPDateRange } from 'react-day-picker'
+
 export type DateRange = {
   from: Date
   to: Date
@@ -5,5 +7,9 @@ export type DateRange = {
 
 export interface EventFilters {
   dateRange: DateRange
-  eventTypes: string[]
+  types: string[]
+}
+
+export function isValidDateRange(value: RDPDateRange | undefined): value is DateRange {
+  return value?.from !== undefined && value?.to !== undefined
 }

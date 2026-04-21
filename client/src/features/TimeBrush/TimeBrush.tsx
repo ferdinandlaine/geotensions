@@ -4,9 +4,10 @@ import { zoom, zoomIdentity } from 'd3-zoom'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { TIME_CONFIG } from '@/config/time'
+import { useFilters } from '@/contexts/FiltersContext'
+import { useHasFinePointer } from '@/hooks/useHasFinePointer'
 import { useResizeObserver } from '@/hooks/useResizeObserver'
 import { cn } from '@/lib/utils'
-import type { DateRange } from '@/types/filter'
 
 import { Brush } from './Brush'
 import { KeyboardShortcutsHint } from './KeyboardShortcutsHint'
@@ -14,18 +15,17 @@ import { Overview } from './Overview'
 import { TimeAxis } from './TimeAxis'
 import { useKeyboardControls } from './useKeyboardControls'
 
-export interface TimeBrushProps {
-  value: DateRange
+interface TimeBrushProps {
   className?: string
-  onChange: (range: DateRange) => void
 }
 
 const { COVERAGE_START_DATE, COVERAGE_END_DATE } = TIME_CONFIG
-const isTouchOnly = matchMedia('(pointer: coarse)').matches
 const MAX_SCALE =
   (COVERAGE_END_DATE.getTime() - COVERAGE_START_DATE.getTime()) / (8 * 24 * 60 * 60 * 1000)
 
-function TimeBrush({ value, className, onChange }: TimeBrushProps) {
+function TimeBrush({ className }: TimeBrushProps) {
+  const { dateRange: value, setDateRange: onChange } = useFilters()
+  const hasFinePointer = useHasFinePointer()
   const containerRef = useRef<HTMLDivElement>(null)
   const zoomRef = useRef<ReturnType<typeof zoom<HTMLDivElement, unknown>> | null>(null)
   const [containerWidth, setContainerWidth] = useState<number | null>(null)
@@ -142,7 +142,7 @@ function TimeBrush({ value, className, onChange }: TimeBrushProps) {
         </>
       )}
 
-      {!isTouchOnly && (
+      {hasFinePointer && (
         <div className="absolute -top-12 right-0">
           <KeyboardShortcutsHint />
         </div>

@@ -7,61 +7,49 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from '@/components/ui/sidebar'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useFilters } from '@/contexts/FiltersContext'
 import type { EventTypeMap } from '@/types/event'
 
-interface EventFilterProps {
-  value: string[]
-  onChange: (types: string[]) => void
-}
-
-/**
- * Selection semantics:
- * - [] = no filter active, nothing checked, all events shown
- * - ["Protests"] = type checked (all its subtypes)
- * - ["Peaceful protest"] = single subtype checked
- */
-
 /** Expand compact selection to all selected subtypes */
-function expand(selection: string[], eventTypes: EventTypeMap): Set<string> {
+function expand(selection: string[], typeMap: EventTypeMap): Set<string> {
   if (!selection.length) return new Set()
-  return new Set(selection.flatMap((item) => eventTypes[item] ?? [item]))
+  return new Set(selection.flatMap((item) => typeMap[item] ?? [item]))
 }
 
 /** Compact selected subtypes to minimal form (type name if all its subtypes selected) */
-function compact(selected: Set<string>, eventTypes: EventTypeMap): string[] {
+function compact(selected: Set<string>, typeMap: EventTypeMap): string[] {
   if (selected.size === 0) return []
 
-  return Object.keys(eventTypes).flatMap((type) => {
-    const subtypes = eventTypes[type]
+  return Object.keys(typeMap).flatMap((type) => {
+    const subtypes = typeMap[type]
     if (subtypes.every((sub) => selected.has(sub))) return [type]
     return subtypes.filter((sub) => selected.has(sub))
   })
 }
 
-function EventTypeFilter({ value, onChange }: EventFilterProps) {
-  const { data: eventTypes, isLoading } = useQuery({
+function EventTypeFilter() {
+  const { eventTypes: types, setEventTypes } = useFilters()
+  const { data: typeMap } = useQuery({
     queryKey: ['eventTypes'],
     queryFn: getEventTypes,
-    staleTime: Infinity,
   })
 
   function toggleType(type: string, checked: boolean) {
-    if (!eventTypes) return
+    if (!typeMap) return
 
-    const selected = expand(value, eventTypes)
-    eventTypes[type].forEach((sub) => (checked ? selected.add(sub) : selected.delete(sub)))
-    onChange(compact(selected, eventTypes))
+    const selected = expand(types, typeMap)
+    typeMap[type].forEach((sub) => (checked ? selected.add(sub) : selected.delete(sub)))
+    setEventTypes(compact(selected, typeMap))
   }
 
   function toggleSubtype(subtype: string, checked: boolean) {
-    if (!eventTypes) return
+    if (!typeMap) return
 
-    const selected = expand(value, eventTypes)
-
+    const selected = expand(types, typeMap)
     if (checked) selected.add(subtype)
     else selected.delete(subtype)
 
-    onChange(compact(selected, eventTypes))
+    setEventTypes(compact(selected, typeMap))
   }
 
   return (
@@ -80,15 +68,15 @@ function EventTypeFilter({ value, onChange }: EventFilterProps) {
         <CollapsibleContent>
           <SidebarGroupContent className="p-3">
             {import.meta.env.DEV && (
-              <DevBox className="mb-4">{JSON.stringify(value, null, 2)}</DevBox>
+              <DevBox className="mb-4">{JSON.stringify(types, null, 2)}</DevBox>
             )}
 
-            {isLoading && <EventTypeFilterSkeleton />}
+            {!typeMap && <EventTypeFilterSkeleton />}
 
-            {eventTypes &&
-              Object.entries(eventTypes).map(([type, subtypes]) => {
-                const isTypeActive = value.includes(type)
-                const isTypePartial = !isTypeActive && subtypes.some((st) => value.includes(st))
+            {typeMap &&
+              Object.entries(typeMap).map(([type, subtypes]) => {
+                const isTypeActive = types.includes(type)
+                const isTypePartial = !isTypeActive && subtypes.some((st) => types.includes(st))
 
                 return (
                   <Collapsible key={type} className="group/type">
@@ -109,7 +97,7 @@ function EventTypeFilter({ value, onChange }: EventFilterProps) {
 
                     <CollapsibleContent className="ml-6">
                       {subtypes.map((subtype) => {
-                        const isSubtypeActive = isTypeActive || value.includes(subtype)
+                        const isSubtypeActive = isTypeActive || types.includes(subtype)
 
                         return (
                           <label
