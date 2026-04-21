@@ -1,5 +1,6 @@
 import { renderHook } from '@testing-library/react'
 import { addDays, subDays } from 'date-fns'
+import type { KeyboardEvent } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { TIME_CONFIG } from '@/config/time'
@@ -9,14 +10,14 @@ import { useKeyboardControls } from './useKeyboardControls'
 
 const { COVERAGE_START_DATE, COVERAGE_END_DATE } = TIME_CONFIG
 
-function makeEvent(overrides: Partial<React.KeyboardEvent> = {}): React.KeyboardEvent {
+function makeEvent(overrides: Partial<KeyboardEvent> = {}): KeyboardEvent {
   return {
     key: 'ArrowRight',
     altKey: false,
     shiftKey: false,
     preventDefault: vi.fn(),
     ...overrides,
-  } as unknown as React.KeyboardEvent
+  } as unknown as KeyboardEvent
 }
 
 function setup(value: DateRange) {

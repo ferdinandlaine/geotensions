@@ -2,7 +2,7 @@ import { select } from 'd3-selection'
 import type { ZoomBehavior } from 'd3-zoom'
 import { zoomIdentity, zoomTransform } from 'd3-zoom'
 import { addDays, clamp, differenceInDays, subDays } from 'date-fns'
-import { type RefObject, useCallback } from 'react'
+import { type KeyboardEvent, type KeyboardEventHandler, type RefObject, useCallback } from 'react'
 
 import { TIME_CONFIG } from '@/config/time'
 import type { DateRange } from '@/types/filter'
@@ -24,9 +24,9 @@ export function useKeyboardControls({
   containerRef,
   zoomRef,
   containerWidth,
-}: UseKeyboardControlsParams): React.KeyboardEventHandler {
+}: UseKeyboardControlsParams): KeyboardEventHandler {
   return useCallback(
-    (event: React.KeyboardEvent) => {
+    (event: KeyboardEvent) => {
       const { key, altKey, shiftKey } = event
       const isHorizontal = key === 'ArrowLeft' || key === 'ArrowRight'
       const isVertical = key === 'ArrowUp' || key === 'ArrowDown'
