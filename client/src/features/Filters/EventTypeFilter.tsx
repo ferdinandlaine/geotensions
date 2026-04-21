@@ -2,7 +2,6 @@ import { IconCategory, IconChevronRight } from '@tabler/icons-react'
 import { useQuery } from '@tanstack/react-query'
 
 import { getEventTypes } from '@/api/events'
-import DevBox from '@/components/DevBox'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from '@/components/ui/sidebar'
@@ -67,10 +66,6 @@ function EventTypeFilter() {
 
         <CollapsibleContent>
           <SidebarGroupContent className="p-3">
-            {import.meta.env.DEV && (
-              <DevBox className="mb-4">{JSON.stringify(types, null, 2)}</DevBox>
-            )}
-
             {!typeMap && <EventTypeFilterSkeleton />}
 
             {typeMap &&

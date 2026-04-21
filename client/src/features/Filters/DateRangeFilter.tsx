@@ -1,8 +1,6 @@
 import { IconCalendarEvent, IconChevronRight } from '@tabler/icons-react'
-import { format } from 'date-fns'
 import type { DateRange } from 'react-day-picker'
 
-import DevBox from '@/components/DevBox'
 import { Calendar } from '@/components/ui/calendar'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel } from '@/components/ui/sidebar'
@@ -34,19 +32,6 @@ function DateRangeFilter() {
 
         <CollapsibleContent>
           <SidebarGroupContent className="p-3">
-            {import.meta.env.DEV && (
-              <DevBox className="mb-4">
-                {JSON.stringify(
-                  {
-                    from: value.from && format(value.from, 'yyyy-MM-dd'),
-                    to: value.to && format(value.to, 'yyyy-MM-dd'),
-                  },
-                  null,
-                  2
-                )}
-              </DevBox>
-            )}
-
             <Calendar
               mode="range"
               selected={value}
