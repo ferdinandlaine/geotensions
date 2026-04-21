@@ -39,6 +39,7 @@ function Map({ children }: PropsWithChildren) {
       dragRotate={false}
       renderWorldCopies={false}
       attributionControl={false}
+      interactiveLayerIds={['events-layer']}
       onLoad={handleMapLoad}
     >
       {children}

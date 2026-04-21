@@ -12,4 +12,5 @@ export const MAP_CONFIG = {
   INITIAL_ZOOM: 4 as number,
   MIN_ZOOM: 1 as number,
   MAX_ZOOM: 14 as number,
+  DETAIL_ZOOM_THRESHOLD: 10 as number,
 } as const

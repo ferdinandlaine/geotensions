@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar'
 import { FiltersProvider } from '@/contexts/FiltersContext'
 import { MapProvider } from '@/contexts/MapContext'
+import { EventsLayer } from '@/features/Events'
 import { Map, MapControls, Minimap } from '@/features/Map'
 import { TimeBrush } from '@/features/TimeBrush'
 import { useHasFinePointer } from '@/hooks/useHasFinePointer'
@@ -20,7 +21,9 @@ function App() {
 
         <MapProvider>
           <main className="fixed inset-0">
-            <Map />
+            <Map>
+              <EventsLayer />
+            </Map>
           </main>
 
           <div className="fixed inset-x-8 bottom-8">
