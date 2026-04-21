@@ -1,14 +1,7 @@
-# System
 **/.DS_Store
 .vscode/
-
-# Env
 **/.env*
 !**/.env.example
-
-# Docs
 **/*.md
 !README.md
-
-# Data
 data/

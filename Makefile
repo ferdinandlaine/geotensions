@@ -1,4 +1,4 @@
-.PHONY: dev api create-user clean
+.PHONY: dev api ingest create-user clean
 
 dev: # Start development environment
 	@if [ ! -f .env ]; then cp .env.example .env; fi
@@ -8,21 +8,19 @@ dev: # Start development environment
 	docker compose up -d --build api database ingest
 	cd client && pnpm install && pnpm dev
 
-api: # Rebuild and restart API services
+api: # Build and start API service
 	docker compose up -d --build api
 	docker compose exec api composer install --no-interaction
 
-database: # Start database only
+database:
 	docker compose up -d database
 
-ingest: database # Ingest CSV files from data/ directory (one-shot)
+ingest: database # Ingest CSV files (one-shot)
 	docker compose run --rm ingest python ingest_acled.py
 
-create-user: # Create a user (usage: make create-user u=admin p=secret)
+create-user: # Usage: `make create-user u=admin p=secret`
 	docker compose exec api bin/console app:create-user $(u) $(p)
 
-clean: # Clean generated files and remove volumes
+clean: # Remove database volume, dependencies and cache
 	docker compose down -v
-	rm -rf api/vendor
-	rm -rf api/var/cache/*
-	rm -rf client/node_modules
+	rm -rf client/node_modules api/vendor api/var/cache

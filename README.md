@@ -2,13 +2,12 @@
 
 Data visualization application for [ACLED](https://acleddata.com) (Armed Conflict Location & Event Data).
 
-Explore conflicts through an interactive map with a time brush and filters.
+Explore conflicts through an interactive map, time brush and filters.
 
 ## Quick Start
 
 ```bash
-# Start development environment
-make dev
+make dev # Start development environment
 ```
 
 - Access web app: **http://localhost:5173**
@@ -16,13 +15,13 @@ make dev
 
 ## Commands
 
-| Command            | Description                                        |
-| ------------------ | -------------------------------------------------- |
-| `make dev`         | Start development environment                      |
-| `make api`         | Rebuild and restart API services                   |
-| `make ingest`      | Ingest CSV files from `data/` directory (one-shot) |
-| `make create-user` | Create a user (make create-user u=admin p=secret)  |
-| `make clean`       | Clean generated files and remove volumes           |
+| Command            | Description                                    |
+| ------------------ | ---------------------------------------------- |
+| `make dev`         | Start development environment                  |
+| `make api`         | Build and start API service                    |
+| `make ingest`      | Ingest CSV files (one-shot)                    |
+| `make create-user` | Usage: `make create-user u=admin p=secret`     |
+| `make clean`       | Remove database volume, dependencies and cache |
 
 ## ACLED Data & Methodology
 
@@ -32,19 +31,19 @@ make dev
 ### Data Ingestion
 
 1. Export data with all output options unchecked
-2. Upload a CSV file:
+2. Upload a CSV file
 
    ```bash
    curl -u admin:secret -F "file=@acled_data.csv" http://localhost:5050/
    ```
 
-   Credentials are set via `ADMIN_USERNAME` / `ADMIN_PASSWORD` in `scripts/ingest/.env`.
+   > Credentials are set in `scripts/ingest/.env`
 
-   Or batch-process files already in `data/` with `make ingest`.
+   Or batch-process files from `data/` with `make ingest`
 
 ### Important notes
 
-- **Event IDs**: The API uses ACLED's official identifiers (`acled_id` like "FRA37186"), not database internal IDs.
+- **Event ID**: API uses ACLED's official identifier (e.g. "FRA37186"), not the database primary key
 
 ## License
 
