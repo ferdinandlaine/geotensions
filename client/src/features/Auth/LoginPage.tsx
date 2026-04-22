@@ -25,9 +25,12 @@ function LoginPage() {
     setError(null)
 
     try {
-      const { token } = await request<{ token: string }>('login', {
+      const { token } = await request<{ token: string }>('auth', {
         method: 'POST',
-        body: JSON.stringify({ username: username.trim().toLowerCase(), password }),
+        body: JSON.stringify({
+          username: username.trim().toLowerCase(),
+          password,
+        }),
       })
 
       login(token)

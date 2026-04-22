@@ -253,11 +253,7 @@ class EventsController extends AbstractController
                 type: 'array',
                 items: new OA\Items(type: 'string')
             ),
-            example: [
-                'Battles' => ['Armed clash', 'Government regains territory', 'Non-state actor overtakes territory'],
-                'Protests' => ['Excessive force against protesters', 'Peaceful protest', 'Protest with intervention'],
-                'Riots' => ['Mob violence', 'Violent demonstration']
-            ]
+            example: EventRepository::TYPE_ALLOWLIST
         )
     )]
     public function getTypes(): JsonResponse

@@ -15,11 +15,11 @@ class AuthController extends AbstractController
         private UserRepository $userRepository
     ) {}
 
-    #[Route('/login', name: 'login', methods: ['POST'])]
+    #[Route('/auth', name: 'auth', methods: ['POST'])]
     #[OA\Post(
-        path: '/api/login',
+        path: '/api/auth',
         summary: 'Authenticate',
-        description: 'Returns a bearer token valid for 1 week'
+        description: 'Exchange username and password for a bearer token valid for 1 week'
     )]
     #[OA\RequestBody(
         required: true,
@@ -41,12 +41,12 @@ class AuthController extends AbstractController
         )
     )]
     #[OA\Response(response: 401, description: 'Invalid credentials')]
-    public function login(Request $request): JsonResponse
+    public function auth(Request $request): JsonResponse
     {
         $payload = json_decode($request->getContent(), true);
-        
+
         if (empty($payload['username']) || empty($payload['password'])) {
-            return $this->json(['error' => 'missing_credentials', 'message' => 'username and password are required'], 400);
+            return $this->json(['error' => 'missing_credentials', 'message' => 'Username and password are required'], 400);
         }
 
         $username = trim(strtolower($payload['username']));

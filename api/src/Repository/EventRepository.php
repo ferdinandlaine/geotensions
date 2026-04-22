@@ -43,7 +43,7 @@ class EventRepository
      *
      * @see https://acleddata.com/methodology/acled-codebook#acled-events-2
      */
-    private const TYPE_ALLOWLIST = [
+    public const TYPE_ALLOWLIST = [
         'Battles' => ['Government regains territory', 'Non-state actor overtakes territory', 'Armed clash'],
         'Protests' => ['Excessive force against protesters', 'Protest with intervention', 'Peaceful protest'],
         'Riots' => ['Violent demonstration', 'Mob violence'],
