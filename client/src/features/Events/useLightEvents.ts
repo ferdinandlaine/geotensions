@@ -1,18 +1,19 @@
 import { skipToken, useQuery } from '@tanstack/react-query'
+import type { LngLatBounds, Map as MapLibreMap } from 'maplibre-gl'
 import { useEffect, useState } from 'react'
 
 import { getEvents } from '@/api/events'
-import type { BBox, EventsQuery } from '@/types/event'
 import { useFilters } from '@/contexts/FiltersContext'
 import { useMap } from '@/contexts/MapContext'
-import { useThrottled } from '@/hooks/useThrottled'
 import { normalizeBbox } from '@/features/Map/normalizeBbox'
+import { useThrottled } from '@/hooks/useThrottled'
+import type { BBox, EventsQuery } from '@/types/event'
 
-/** Throttle interval during map movement (ms) */
-const MOVE_THROTTLE_MS = 100
+/** Throttle interval during map movement */
+const MOVE_THROTTLE_MS = 250
 
 /** Maximum events for the light layer */
-const LIGHT_LIMIT = 150
+const LIGHT_LIMIT = 2500
 
 /** Snap bbox outward to a grid so small pans reuse the same query cache */
 function snapBbox(bbox: BBox, precision: number): BBox {
@@ -51,7 +52,7 @@ export function useLightEvents() {
 
   return useQuery({
     queryKey: ['light-events', query],
-    queryFn: query ? ({ signal }) => getEvents(query, { signal }) : skipToken,
+    queryFn: query ? () => getEvents(query) : skipToken,
     placeholderData: (previousData) => previousData,
     gcTime: 30000,
     enabled: !!query,
@@ -62,7 +63,7 @@ export function useLightEvents() {
  * Subscribe to the map's `movestart` and `moveend` events to track active movement.
  * Returns true while the map is in a move cycle.
  */
-function useIsMoving(map: import('maplibre-gl').Map | null): boolean {
+function useIsMoving(map: MapLibreMap | null): boolean {
   const [moving, setMoving] = useState(false)
 
   useEffect(() => {
@@ -87,8 +88,8 @@ function useIsMoving(map: import('maplibre-gl').Map | null): boolean {
  * Subscribe to the map's `move` events to get live bounds during movement.
  * Falls back to `null` when map is null.
  */
-function useLiveBounds(map: import('maplibre-gl').Map | null): import('maplibre-gl').LngLatBounds | null {
-  const [liveBounds, setLiveBounds] = useState<import('maplibre-gl').LngLatBounds | null>(null)
+function useLiveBounds(map: MapLibreMap | null): LngLatBounds | null {
+  const [liveBounds, setLiveBounds] = useState<LngLatBounds | null>(null)
 
   useEffect(() => {
     if (!map) return
