@@ -27,14 +27,16 @@ function snapBbox(bbox: BBox, precision: number): BBox {
 }
 
 export function useLightEvents() {
-  const { map, bounds, zoom } = useMap()
+  const { map, zoom } = useMap()
+  // Use live bounds from map 'move' events during movement (MapContext only updates on 'moveend')
+  const liveBounds = useLiveBounds(map)
   const { dateRange, eventTypes: types } = useFilters()
 
   // Track whether the map is actively moving
   const isMoving = useIsMoving(map)
 
   // Throttle the bbox during movement
-  const throttledBbox = isMoving && bounds ? snapBbox(normalizeBbox(bounds), 2) : undefined
+  const throttledBbox = isMoving && liveBounds ? snapBbox(normalizeBbox(liveBounds), 2) : undefined
   const throttledBboxValue = useThrottled(throttledBbox, MOVE_THROTTLE_MS)
 
   let query: EventsQuery | undefined
@@ -79,4 +81,25 @@ function useIsMoving(map: import('maplibre-gl').Map | null): boolean {
   }, [map])
 
   return moving
+}
+
+/**
+ * Subscribe to the map's `move` events to get live bounds during movement.
+ * Falls back to `null` when map is null.
+ */
+function useLiveBounds(map: import('maplibre-gl').Map | null): import('maplibre-gl').LngLatBounds | null {
+  const [liveBounds, setLiveBounds] = useState<import('maplibre-gl').LngLatBounds | null>(null)
+
+  useEffect(() => {
+    if (!map) return
+
+    const handleMove = () => setLiveBounds(map.getBounds())
+    map.on('move', handleMove)
+
+    return () => {
+      map.off('move', handleMove)
+    }
+  }, [map])
+
+  return liveBounds
 }
