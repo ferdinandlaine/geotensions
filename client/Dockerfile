@@ -5,13 +5,13 @@ FROM node:24-alpine AS build
 WORKDIR /app
 
 RUN corepack enable
-COPY client/package.json client/pnpm-lock.yaml* ./
+COPY client/package.json client/pnpm-lock.yaml client/pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
-COPY client/ .
 
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 
+COPY client/ .
 RUN pnpm run build
 
 FROM nginx:alpine
