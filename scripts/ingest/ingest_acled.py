@@ -28,7 +28,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 DATABASE_URL = os.getenv("DATABASE_URL")
-DATA_DIR = Path(os.getenv("DATA_DIR")) if os.getenv("DATA_DIR") else Path("/data")
+DATA_DIR = Path(os.getenv("DATA_DIR") or "/data")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 if not DATABASE_URL:
