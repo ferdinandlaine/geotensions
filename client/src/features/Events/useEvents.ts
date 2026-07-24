@@ -1,45 +1,82 @@
-import { skipToken, useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useSyncExternalStore } from 'react'
 
-import { getEvents } from '@/api/events'
-import { MAP_CONFIG } from '@/config/map'
 import { useFilters } from '@/contexts/FiltersContext'
 import { useMap } from '@/contexts/MapContext'
-import { normalizeBbox } from '@/features/Map/normalizeBbox'
-import type { BBox, EventsQuery } from '@/types/event'
+import type { EventCollection, EventFeature } from '@/types/event'
 
-/** Snap bbox outward to a grid so that small pans reuse the same cache entry and prefetch edges */
-function snapBbox(bbox: BBox, precision: number): BBox {
-  const snap = (n: number, op: (x: number) => number) =>
-    op(Number((n * precision).toFixed(10))) / precision
-  return [
-    snap(bbox[0], Math.floor),
-    snap(bbox[1], Math.floor),
-    snap(bbox[2], Math.ceil),
-    snap(bbox[3], Math.ceil),
-  ]
-}
+import { tileStore } from './tileStore'
+import { getTiles } from './tileUtils'
 
-export function useEvents() {
-  const { bounds, zoom } = useMap()
+export function useEvents(): {
+  features: EventCollection | null
+  isFetching: boolean
+} {
+  const { bounds, zoom, isSettled } = useMap()
   const { dateRange, eventTypes: types } = useFilters()
 
-  let query: EventsQuery | undefined
-  if (bounds && zoom !== null) {
-    const isDetailed = zoom > MAP_CONFIG.DETAIL_ZOOM_THRESHOLD
-    const bbox = normalizeBbox(bounds)
+  const filters = useMemo(() => ({ dateRange, types }), [dateRange, types])
 
-    query = {
-      bbox: isDetailed ? snapBbox(bbox, 10) : snapBbox(bbox, 1),
-      filters: { dateRange, types },
-      fields: isDetailed ? ['date', 'type', 'sub_type', 'actor1', 'actor2'] : [],
-      limit: isDetailed ? 5000 : 20000,
+  const tiles = useMemo(() => {
+    if (!bounds || zoom === null) return []
+    return getTiles(bounds, zoom, filters)
+  }, [bounds, zoom, filters])
+
+  useEffect(() => {
+    if (!tiles.length) return
+
+    const controller = new AbortController()
+    const activeKeys = new Set(tiles.map((t) => t.key))
+    tileStore.prune(activeKeys)
+
+    for (const tile of tiles) {
+      tileStore.fetchTile({
+        key: tile.key,
+        bbox: tile.bbox,
+        filters,
+        fields: tile.fields,
+        limit: tile.limit,
+        signal: controller.signal,
+        revalidate: isSettled,
+      })
     }
-  }
 
-  return useQuery({
-    queryKey: ['events', query],
-    queryFn: query ? ({ signal }) => getEvents(query, { signal }) : skipToken,
-    placeholderData: (previousData) => previousData,
-    gcTime: 60000,
-  })
+    return () => controller.abort()
+  }, [tiles, filters, isSettled])
+
+  const snapshot = useSyncExternalStore(tileStore.subscribe, tileStore.getSnapshot)
+
+  const result = useMemo(() => {
+    if (!tiles.length) return { features: null, isFetching: false }
+
+    // Deduplicate features by id since overlapping tiles may include the same event.
+    const seen = new Set<string>()
+    const features: EventFeature[] = []
+    let isFetching = false
+    let isTruncated = false
+
+    for (const tile of tiles) {
+      const data = tileStore.getData(tile.key)
+      if (data) {
+        for (const f of data.features) {
+          if (seen.has(f.id)) continue
+          seen.add(f.id)
+          features.push(f)
+        }
+        if (data.isTruncated) isTruncated = true
+      }
+      if (tileStore.isLoading(tile.key)) isFetching = true
+    }
+
+    return {
+      features: {
+        type: 'FeatureCollection',
+        features,
+        is_truncated: isTruncated,
+      } satisfies EventCollection,
+      isFetching,
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- snapshot tracks tileStore version bumps
+  }, [snapshot, tiles])
+
+  return result
 }

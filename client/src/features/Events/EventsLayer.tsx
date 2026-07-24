@@ -5,7 +5,7 @@ import { MAP_CONFIG } from '@/config/map'
 import { useEvents } from './useEvents'
 
 function EventsLayer() {
-  const { data: events, isFetching } = useEvents()
+  const { features: events, isFetching } = useEvents()
 
   return (
     <>
