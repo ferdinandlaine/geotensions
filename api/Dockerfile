@@ -9,6 +9,8 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 COPY api/ .
 
+ENV COMPOSER_ALLOW_SUPERUSER=1
+
 RUN echo "APP_ENV=prod" > .env \
     && composer install --no-interaction --no-dev --optimize-autoloader --no-scripts \
     && composer dump-env prod --empty
