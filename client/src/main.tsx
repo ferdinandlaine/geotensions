@@ -6,8 +6,12 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
+import { TileStore } from '@/features/Events/tileStore'
+
 import { App } from './pages/App'
 import { NotFound } from './pages/NotFound'
+
+TileStore.init()
 
 const queryClient = new QueryClient({
   defaultOptions: {
