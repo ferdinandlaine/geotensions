@@ -2,14 +2,36 @@ import { format } from 'date-fns'
 
 import type { EventCollection, EventsQuery, EventTypeMap } from '@/types/event'
 
-import { request } from './client'
+import { fetchApi, request } from './client'
 
-export function getEvents(query: EventsQuery, options?: { signal: AbortSignal }) {
-  return request<EventCollection>(`events?${toParams(query)}`, options)
+interface EventsResponse {
+  data: EventCollection
+  lastModified: string
+}
+
+export async function getEvents(
+  query: EventsQuery,
+  options?: { ifModifiedSince?: string; signal?: AbortSignal }
+): Promise<EventsResponse | null> {
+  const headers = options?.ifModifiedSince
+    ? new Headers({ 'If-Modified-Since': options.ifModifiedSince })
+    : undefined
+  const response = await fetchApi(`events?${toParams(query)}`, { headers, signal: options?.signal })
+
+  if (response.status === 304) return null
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+  }
+
+  const lastModified = response.headers.get('Last-Modified')
+  if (!lastModified) throw new Error('Missing Last-Modified header')
+
+  return { data: await response.json(), lastModified }
 }
 
 export function getEventTypes() {
-  return request<EventTypeMap>(`types`)
+  return request<EventTypeMap>('types')
 }
 
 function toParams(query: EventsQuery): URLSearchParams {
