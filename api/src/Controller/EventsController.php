@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\EventRepository;
 use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\Routing\Attribute\Route;
@@ -188,9 +189,28 @@ class EventsController extends AbstractController
                 new OA\Property(property: 'is_truncated', type: 'boolean', example: false),
             ],
             type: 'object'
-        )
+        ),
+        headers: [
+            new OA\Header(
+                header: 'Last-Modified',
+                description: 'Date of the last data update',
+                schema: new OA\Schema(type: 'string', example: 'Wed, 01 Jul 2026 21:00:00 GMT')
+            )
+        ]
+    )]
+    #[OA\Response(
+        response: 304,
+        description: 'No changes since If-Modified-Since',
+        headers: [
+            new OA\Header(
+                header: 'Last-Modified',
+                description: 'Date of the last data update',
+                schema: new OA\Schema(type: 'string', example: 'Wed, 01 Jul 2026 21:00:00 GMT')
+            )
+        ]
     )]
     public function getEvents(
+        Request $request,
         #[MapQueryParameter] string $bbox,
         #[MapQueryParameter('date_from')] string $dateFrom,
         #[MapQueryParameter('date_to')] string $dateTo,
@@ -207,6 +227,15 @@ class EventsController extends AbstractController
 
         if ($types !== null) $types = array_values(array_filter(explode(',', $types)));
         if ($fields !== null) $fields = array_values(array_filter(explode(',', $fields)));
+        $lastUpdatedAt = $this->eventRepository->findLastUpdatedAt($bbox, $dateFrom, $dateTo, $types);
+        $lastModified = $lastUpdatedAt ?? new \DateTimeImmutable('1970-01-01');
+        $response = new JsonResponse();
+        $response->setLastModified($lastModified);
+        $response->headers->set('Cache-Control', 'public, no-cache');
+        if ($response->isNotModified($request)) {
+            return $response;
+        }
+
         $limit = max(1, min(20000, $limit));
         $events = $this->eventRepository->findEvents($bbox, $dateFrom, $dateTo, $types, $fields, $limit + 1);
         $isTruncated = count($events) > $limit;
@@ -216,26 +245,23 @@ class EventsController extends AbstractController
 
         $features = [];
         foreach ($events as $event) {
+            $id = $event['acled_id'];
             $geometry = json_decode($event['geom'], true);
-            $acledId = $event['acled_id'];
-
             unset($event['acled_id'], $event['geom']);
-
             $features[] = [
                 'type' => 'Feature',
-                'id' => $acledId,
+                'id' => $id,
                 'geometry' => $geometry,
                 'properties' => (object) $event
             ];
         }
 
-        $geojson = [
+        $response->setData([
             'type' => 'FeatureCollection',
             'features' => $features,
             'is_truncated' => $isTruncated,
-        ];
-
-        return $this->json($geojson);
+        ]);
+        return $response;
     }
 
     #[Route('/types', name: 'types', methods: ['GET'])]

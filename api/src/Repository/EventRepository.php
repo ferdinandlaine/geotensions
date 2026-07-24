@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
 
 class EventRepository
 {
@@ -78,16 +79,61 @@ class EventRepository
         ?array $fields,
         int $limit = 2500
     ): array {
-        $qb = $this->connection->createQueryBuilder();
-
-        [$minLon, $minLat, $maxLon, $maxLat] = $bbox;
         $fields = $fields !== null
             ? array_values(array_intersect(self::FIELDS_ALLOWLIST, $fields))
             : self::FIELDS_ALLOWLIST;
 
-        $qb->select(...array_merge(['acled_id'], ['ST_AsGeoJSON(geom) as geom'], $fields))
-            ->from('events')
-            ->where('geom && ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)')
+        $qb = $this->connection->createQueryBuilder();
+        $qb->select(...array_merge(['acled_id'], ['ST_AsGeoJSON(geom) as geom'], $fields))->from('events');
+        $this->applyEventFilters($qb, $bbox, $dateFrom, $dateTo, $types);
+        $qb->orderBy('sample_order', 'ASC')
+            ->addOrderBy('id', 'ASC')
+            ->setMaxResults($limit);
+
+        $result = $qb->executeQuery();
+        return $result->fetchAllAssociative();
+    }
+
+    /**
+     * Find the maximum updated_at timestamp.
+     *
+     * @param array $bbox [minLon, minLat, maxLon, maxLat]
+     * @param string $dateFrom Start date (YYYY-MM-DD)
+     * @param string $dateTo End date (YYYY-MM-DD)
+     * @param ?array $types Parent types and/or subtypes (see TYPE_ALLOWLIST)
+     * @return \DateTimeImmutable|null Null if no events match the filters
+     */
+    public function findLastUpdatedAt(
+        array $bbox,
+        string $dateFrom,
+        string $dateTo,
+        ?array $types
+    ): ?\DateTimeImmutable {
+        $qb = $this->connection->createQueryBuilder();
+        $qb->select('MAX(updated_at)')->from('events');
+        $this->applyEventFilters($qb, $bbox, $dateFrom, $dateTo, $types);
+        $result = $qb->fetchOne();
+        return $result === null ? null : new \DateTimeImmutable($result);
+    }
+
+    /**
+     * Applies filter WHERE clauses.
+     *
+     * @param array $bbox [minLon, minLat, maxLon, maxLat]
+     * @param string $dateFrom Start date (YYYY-MM-DD)
+     * @param string $dateTo End date (YYYY-MM-DD)
+     * @param ?array $types Parent types and/or subtypes (see TYPE_ALLOWLIST)
+     */
+    private function applyEventFilters(
+        QueryBuilder $qb,
+        array $bbox,
+        string $dateFrom,
+        string $dateTo,
+        ?array $types,
+    ): void {
+        [$minLon, $minLat, $maxLon, $maxLat] = $bbox;
+
+        $qb->where('geom && ST_MakeEnvelope(:minLon, :minLat, :maxLon, :maxLat, 4326)')
             ->andWhere('date >= :date_from')
             ->andWhere('date <= :date_to')
             ->setParameter('minLon', $minLon)
@@ -113,13 +159,6 @@ class EventRepository
             }
             $qb->andWhere($qb->expr()->or(...$conditions));
         }
-
-        $qb->orderBy('sample_order', 'ASC')
-            ->addOrderBy('id', 'ASC')
-            ->setMaxResults($limit);
-
-        $result = $qb->executeQuery();
-        return $result->fetchAllAssociative();
     }
 
     /**
@@ -130,7 +169,6 @@ class EventRepository
     public function findDistinctTypes(): array
     {
         $qb = $this->connection->createQueryBuilder();
-
         $qb->select('DISTINCT type', 'sub_type')
             ->from('events');
 
