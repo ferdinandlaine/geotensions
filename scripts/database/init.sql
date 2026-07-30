@@ -51,6 +51,8 @@ CREATE EXTENSION IF NOT EXISTS btree_gist;
 CREATE INDEX events_geom_date_sample_idx 
   ON events USING GIST(geom, date, sample_order);
 
+CREATE INDEX events_updated_at_idx ON events(updated_at);
+
 -- Authentication
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
